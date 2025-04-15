@@ -5,18 +5,39 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PNUserController;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\Training\StudentController;
+use App\Http\Controllers\Training\SchoolController;
+use App\Http\Controllers\Training\ManageStudentController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+// Direct access to students info
+Route::get('/students-info', [StudentController::class, 'index'])->name('students.info');
+
+// Direct access to manage students
+Route::get('/manage-students', [ManageStudentController::class, 'index'])->name('manage.students');
+Route::get('/manage-students/{id}/edit', [ManageStudentController::class, 'edit'])->name('manage.students.edit');
+Route::put('/manage-students/{id}', [ManageStudentController::class, 'update'])->name('manage.students.update');
+Route::delete('/manage-students/{id}', [ManageStudentController::class, 'destroy'])->name('manage.students.destroy');
+
+// School management routes
+Route::get('/manage-schools', [ManageStudentController::class, 'listSchools'])->name('manage.schools');
+Route::get('/manage-schools/create', [ManageStudentController::class, 'createSchool'])->name('manage.schools.create');
+Route::post('/manage-schools', [ManageStudentController::class, 'storeSchool'])->name('manage.schools.store');
+Route::get('/manage-schools/{id}/view', [ManageStudentController::class, 'viewSchool'])->name('manage.schools.view');
+Route::get('/manage-schools/{id}/edit', [ManageStudentController::class, 'editSchool'])->name('manage.schools.edit');
+Route::put('/manage-schools/{id}', [ManageStudentController::class, 'updateSchool'])->name('manage.schools.update');
+Route::delete('/manage-schools/{id}', [ManageStudentController::class, 'destroySchool'])->name('manage.schools.destroy');
+Route::post('/manage-schools/{school}/classes', [ManageStudentController::class, 'storeClass'])->name('manage.schools.classes.store');
+Route::get('/manage-schools/{school}/classes/create', [ManageStudentController::class, 'createClass'])->name('manage.schools.classes.create');
+Route::get('/manage-schools/{school}/classes/{class}/select-students', [ManageStudentController::class, 'selectStudents'])->name('manage.classes.select-students');
+Route::post('/manage-schools/{school}/classes/{class}/select-students', [ManageStudentController::class, 'updateStudents'])->name('manage.classes.update-students');
 
 // Login Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
-
-
 
 Route::middleware('auth')->group(function () {
 
@@ -29,9 +50,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
         // Admin Routes for CRUD
-        Route::prefix('admin')->name('admin.')->group(function () {
-            Route::resource('pnph_users', PNUserController::class);
-        });
+        
         
 
 

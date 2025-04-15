@@ -33,11 +33,21 @@ class Fluent implements Arrayable, ArrayAccess, Jsonable, JsonSerializable
      * Create a new fluent instance.
      *
      * @param  iterable<TKey, TValue>  $attributes
-     * @return void
      */
     public function __construct($attributes = [])
     {
         $this->fill($attributes);
+    }
+
+    /**
+     * Create a new fluent instance.
+     *
+     * @param  iterable<TKey, TValue>  $attributes
+     * @return static
+     */
+    public static function make($attributes = [])
+    {
+        return new static($attributes);
     }
 
     /**

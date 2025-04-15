@@ -15,7 +15,7 @@
     <div class="container">
         <aside class="sidebar">
             <ul class="menu">
-                <li><img src="{{ asset('images/pnlogo') }}" alt="Dashboard"> Dashboard</li>
+                <li><img src="{{ asset('images/Dashboard.png') }}" alt="Dashboard"> Dashboard</li>
                 <li><img src="{{ asset('images/mu.png') }}" alt="Manage Users"> Students Info</li>
                 <li><img src="{{ asset('images/ms.png') }}" alt="Manage Students"> Manage Students</li>
                 <li><img src="{{ asset('images/gs.png') }}" alt="Grade Submission"> Grade Submission</li>

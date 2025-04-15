@@ -38,4 +38,9 @@ class PNUser extends Authenticatable
         'status',
         'is_temp_password'
     ];
+
+    public function classes()
+    {
+        return $this->belongsToMany(\App\Models\ClassModel::class, 'class_student', 'student_id', 'class_id');
+    }
 }
