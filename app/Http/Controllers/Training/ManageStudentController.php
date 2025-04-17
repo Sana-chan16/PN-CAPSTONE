@@ -94,7 +94,7 @@ class ManageStudentController extends Controller
     public function listSchools()
     {
         $schools = \App\Models\School::withCount('subjects')->get();
-        return view('training.manage-schools', compact('schools'));
+        return view('training.manage-students', compact('schools'));
     }
 
     public function viewSchool($id)
@@ -154,5 +154,68 @@ class ManageStudentController extends Controller
         $school = \App\Models\School::findOrFail($id);
         $school->delete();
         return redirect()->route('manage.schools')->with('success', 'School deleted successfully.');
+    }
+
+    public function editSchool($id)
+    {
+        $school = \App\Models\School::findOrFail($id);
+        return view('training.schools-edit', compact('school'));
+    }
+
+    public function updateSchool(Request $request, $id)
+    {
+        $school = \App\Models\School::findOrFail($id);
+        
+        $request->validate([
+            'school_id' => 'required|unique:schools,school_id,' . $id,
+            'school_name' => 'required|unique:schools,school_name,' . $id,
+            'department' => 'required',
+            'course' => 'required',
+            'semesters' => 'required|integer|min:1',
+        ]);
+
+        $school->update($request->all());
+
+        return redirect()->route('manage.schools')
+            ->with('success', 'School information updated successfully.');
+    }
+
+    public function viewClass($school_id, $class_id)
+    {
+        $school = \App\Models\School::findOrFail($school_id);
+        $class = \App\Models\ClassModel::with('students')->findOrFail($class_id);
+        $students = $class->students;
+        
+        return view('training.class-view', compact('school', 'class', 'students'));
+    }
+
+    public function editClass($school_id, $class_id)
+    {
+        $school = \App\Models\School::findOrFail($school_id);
+        $class = \App\Models\ClassModel::findOrFail($class_id);
+        return view('training.class-edit', compact('school', 'class'));
+    }
+
+    public function updateClass(Request $request, $school_id, $class_id)
+    {
+        $class = \App\Models\ClassModel::findOrFail($class_id);
+        
+        $request->validate([
+            'class_name' => 'required|string|max:255',
+        ]);
+
+        $class->update($request->all());
+
+        return redirect()->route('manage.schools.view', $school_id)
+            ->with('success', 'Class updated successfully.');
+    }
+
+    public function destroyClass($school_id, $class_id)
+    {
+        $class = \App\Models\ClassModel::findOrFail($class_id);
+        $class->delete();
+
+        return redirect()->route('manage.schools.view', $school_id)
+            ->with('success', 'Class deleted successfully.');
     }
 } 

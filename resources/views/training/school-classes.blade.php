@@ -21,9 +21,9 @@
                             <td>{{ $class->id }}</td>
                             <td>{{ $class->class_name }}</td>
                             <td class="actions">
-                                <a href="#" class="view-btn">View</a>
-                                <a href="#" class="edit-btn">Edit</a>
-                                <form action="#" method="POST" class="delete-form" style="display:inline;">
+                                <a href="{{ route('manage.classes.view', [$school->id, $class->id]) }}" class="view-btn">View</a>
+                                <a href="{{ route('manage.classes.edit', [$school->id, $class->id]) }}" class="edit-btn">Edit</a>
+                                <form action="{{ route('manage.classes.destroy', [$school->id, $class->id]) }}" method="POST" class="delete-form" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to delete this class?')">Delete</button>
@@ -43,23 +43,20 @@
     <style>
         .header-container {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
             padding: 0 20px;
+            position: relative;
         }
         .add-class-btn {
-            width: 10%;
             background-color: #ff9933;
             color: white;
             padding: 10px 20px;
             border-radius: 4px;
-            border: none;
+            text-decoration: none;
             font-weight: 500;
             transition: all 0.3s ease;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
         }
         .add-class-btn:hover {
             background-color: #e68a00;
@@ -68,7 +65,7 @@
         .school-classes {
             padding: 20px;
         }
-        .table-responsive {
+        /* .table-responsive {
             width: 100%;
             max-width: 600px;
             margin: 0 auto;
@@ -76,7 +73,9 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 20px;
-        }
+        } */
+
+        
         h1 {
             color: #333;
             margin-bottom: 20px;
@@ -84,7 +83,7 @@
             text-align: center;
         }
         .classes-table {
-            width: 100%;
+            width: 90%;
             border-collapse: collapse;
             margin: 0 auto;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -99,6 +98,10 @@
             background-color: #4CAF50;
             color: white;
             font-weight: 500;
+        }
+        .classes-table th:nth-child(3),
+        .classes-table td:nth-child(3) {
+            text-align: center;
         }
         .classes-table tr:hover {
             background-color: #f5f5f5;

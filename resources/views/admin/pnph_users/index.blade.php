@@ -139,20 +139,4 @@
 }
 </style>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Prevent row clicks from triggering navigation
-    const tableRows = document.querySelectorAll('.table tbody tr');
-    tableRows.forEach(row => {
-        row.addEventListener('click', function(e) {
-            // Only prevent default if clicking on the row itself, not on action buttons
-            if (e.target.tagName !== 'A' && e.target.tagName !== 'BUTTON' && !e.target.closest('form')) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        });
-    });
-});
-</script>
-
 @endsection

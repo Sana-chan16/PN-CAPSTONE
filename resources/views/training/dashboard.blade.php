@@ -3,8 +3,8 @@
 @section('content')
     <section class="dashboard-content">
         <div class="dashboard-header">
-            <h1>Training Dashboard</h1>
-            <p class="welcome-message">Welcome back, {{ Auth::user()->user_fname }}!</p>
+            <h1>Welcome to PNPh-SAMS</h1>
+            <p class="welcome-message">Your Student Management System</p>
         </div>
 
         <div class="dashboard-stats">
@@ -13,28 +13,28 @@
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>Total Trainees</h3>
-                    <p class="stat-number">{{ $totalTrainees ?? 0 }}</p>
+                    <h3>Total Students</h3>
+                    <p class="stat-number">0</p>
                 </div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-book"></i>
+                    <i class="fas fa-school"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>Active Courses</h3>
-                    <p class="stat-number">{{ $activeCourses ?? 0 }}</p>
+                    <h3>Total Schools</h3>
+                    <p class="stat-number">0</p>
                 </div>
             </div>
 
             <div class="stat-card">
                 <div class="stat-icon">
-                    <i class="fas fa-calendar-check"></i>
+                    <i class="fas fa-chart-line"></i>
                 </div>
                 <div class="stat-info">
-                    <h3>Upcoming Sessions</h3>
-                    <p class="stat-number">{{ $upcomingSessions ?? 0 }}</p>
+                    <h3>Active Interventions</h3>
+                    <p class="stat-number">0</p>
                 </div>
             </div>
         </div>
@@ -43,75 +43,52 @@
             <div class="dashboard-section">
                 <h2>Quick Actions</h2>
                 <div class="quick-actions">
-                    <a href="{{ route('training.courses.create') }}" class="action-button">
-                        <i class="fas fa-plus"></i>
-                        <span>Create New Course</span>
+                    <a href="#" class="action-button">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>View Students</span>
                     </a>
-                    <a href="{{ route('training.sessions.schedule') }}" class="action-button">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Schedule Session</span>
+                    <a href="#" class="action-button">
+                        <i class="fas fa-edit"></i>
+                        <span>Manage Students</span>
                     </a>
-                    <a href="{{ route('training.reports') }}" class="action-button">
-                        <i class="fas fa-chart-bar"></i>
-                        <span>View Reports</span>
+                    <a href="#" class="action-button">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Grade Submission</span>
                     </a>
                 </div>
             </div>
 
             <div class="dashboard-section">
-                <h2>Recent Activities</h2>
-                <div class="activity-list">
-                    @forelse($recentActivities as $activity)
-                        <div class="activity-item">
-                            <div class="activity-icon">
-                                <i class="fas fa-{{ $activity->icon }}"></i>
-                            </div>
-                            <div class="activity-details">
-                                <p class="activity-description">{{ $activity->description }}</p>
-                                <span class="activity-time">{{ $activity->created_at->diffForHumans() }}</span>
-                            </div>
+                <h2>System Status</h2>
+                <div class="status-list">
+                    <div class="status-item">
+                        <div class="status-icon">
+                            <i class="fas fa-check-circle"></i>
                         </div>
-                    @empty
-                        <p class="no-activities">No recent activities</p>
-                    @endforelse
+                        <div class="status-details">
+                            <p class="status-description">Student Management Module</p>
+                            <span class="status-indicator">Ready</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="status-details">
+                            <p class="status-description">Grade Submission Module</p>
+                            <span class="status-indicator">Ready</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="status-details">
+                            <p class="status-description">Intervention Module</p>
+                            <span class="status-indicator">Ready</span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="dashboard-section">
-            <h2>Upcoming Training Sessions</h2>
-            <div class="sessions-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Course</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Location</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($upcomingSessionsList as $session)
-                            <tr>
-                                <td>{{ $session->course->name }}</td>
-                                <td>{{ $session->date->format('M d, Y') }}</td>
-                                <td>{{ $session->start_time->format('h:i A') }} - {{ $session->end_time->format('h:i A') }}</td>
-                                <td>{{ $session->location }}</td>
-                                <td><span class="status-badge {{ $session->status }}">{{ $session->status }}</span></td>
-                                <td>
-                                    <a href="{{ route('training.sessions.view', $session->id) }}" class="action-link">View</a>
-                                    <a href="{{ route('training.sessions.edit', $session->id) }}" class="action-link">Edit</a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="no-sessions">No upcoming sessions</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
             </div>
         </div>
     </section>
@@ -125,17 +102,18 @@
 
         .dashboard-header {
             margin-bottom: 30px;
+            text-align: center;
         }
 
         .dashboard-header h1 {
-            font-size: 28px;
+            font-size: 32px;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
 
         .welcome-message {
             color: #666;
-            font-size: 16px;
+            font-size: 18px;
         }
 
         .dashboard-stats {
@@ -152,6 +130,11 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
         }
 
         .stat-icon {
@@ -177,7 +160,6 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
         }
 
         .dashboard-section {
@@ -222,13 +204,13 @@
             color: #22bbea;
         }
 
-        .activity-list {
+        .status-list {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
 
-        .activity-item {
+        .status-item {
             display: flex;
             align-items: center;
             padding: 10px;
@@ -236,84 +218,25 @@
             border-radius: 8px;
         }
 
-        .activity-icon {
+        .status-icon {
             font-size: 18px;
-            color: #22bbea;
+            color: #4CAF50;
             margin-right: 15px;
         }
 
-        .activity-details {
+        .status-details {
             flex: 1;
         }
 
-        .activity-description {
+        .status-description {
             margin: 0;
             color: #333;
         }
 
-        .activity-time {
+        .status-indicator {
             font-size: 12px;
-            color: #666;
-        }
-
-        .sessions-table {
-            overflow-x: auto;
-        }
-
-        .sessions-table table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .sessions-table th,
-        .sessions-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .sessions-table th {
-            background: #f8f9fa;
+            color: #4CAF50;
             font-weight: 500;
-        }
-
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .status-badge.scheduled {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .status-badge.in-progress {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-
-        .status-badge.completed {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-
-        .action-link {
-            color: #22bbea;
-            text-decoration: none;
-            margin-right: 10px;
-        }
-
-        .action-link:hover {
-            text-decoration: underline;
-        }
-
-        .no-activities,
-        .no-sessions {
-            color: #666;
-            text-align: center;
-            padding: 20px;
         }
     </style>
 @endsection

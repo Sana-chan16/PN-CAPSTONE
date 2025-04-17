@@ -43,6 +43,7 @@
             align-items: center;
             margin-bottom: 20px;
             padding: 0 20px;
+            position: relative;
         }
 
         .add-school-btn {
@@ -64,25 +65,26 @@
             padding: 20px;
         }
 
-        .table-responsive {
+        /* .table-responsive {
             width: 100%;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 20px;
-        }
+        } */
 
         h1 {
             color: #333;
             margin-bottom: 20px;
             font-size: 24px;
             text-align: center;
+            flex: 1;
         }
 
         .schools-table {
-            width: 100%;
+            width: 90%;
             border-collapse: collapse;
             margin: 0 auto;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -101,13 +103,18 @@
             font-weight: 500;
         }
 
+        .schools-table th:nth-child(3),
+        .schools-table td:nth-child(3) {
+            text-align: center;
+        }
+
         .schools-table tr:hover {
             background-color: #f5f5f5;
         }
 
         .actions {
             display: flex;
-            gap: 10px;
+            gap: 5px;
             justify-content: center;
         }
 
@@ -118,7 +125,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             text-decoration: none;
             transition: all 0.3s ease;
         }

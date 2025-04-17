@@ -4,44 +4,51 @@
 <div class="create-user-container">
     <h1>Create New User</h1>
 
-    <form action="{{ route('admin.pnph_users.store') }}" method="POST" class="create-user-form">
+    <form action="{{ route('admin.pnph_users.store') }}" method="POST" class="create-user-form" id="createUserForm">
         @csrf
         <div class="form-group">
             <label for="user_id">User ID</label>
-            <input type="text" name="user_id" class="form-control" required>
+            <input type="text" name="user_id" id="user_id" class="form-control" required>
         </div>
 
         <div class="form-group">
             <label for="user_lname">Last Name</label>
-            <input type="text" name="user_lname" class="form-control" required>
+            <input type="text" name="user_lname" id="user_lname" class="form-control" required>
         </div>
 
         <div class="form-group">
             <label for="user_fname">First Name</label>
-            <input type="text" name="user_fname" class="form-control" required>
+            <input type="text" name="user_fname" id="user_fname" class="form-control" required>
         </div>
 
         <div class="form-group">
             <label for="user_mInitial">Middle Initial</label>
-            <input type="text" name="user_mInitial" class="form-control" >
+            <input type="text" name="user_mInitial" id="user_mInitial" class="form-control">
         </div>
 
         <div class="form-group">
             <label for="user_suffix">Suffix</label>
-            <input type="text" name="user_suffix" class="form-control" >
+            <input type="text" name="user_suffix" id="user_suffix" class="form-control">
         </div>
 
         <div class="form-group">
             <label for="user_email">Email</label>
-            <input type="email" name="user_email" class="form-control" required>
+            <input type="email" name="user_email" id="user_email" class="form-control" required>
         </div>
 
         <div class="form-group">
             <label for="user_role">Role</label>
-            <input type="text" name="user_role" class="form-control" required>
+            <select name="user_role" id="user_role" class="form-control" required>
+                <option value="">Select Role</option>
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+            </select>
         </div>
         
-        <button type="submit" class="btn btn-primary">Create User</button>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create User</button>
+            <a href="{{ route('admin.pnph_users.index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
     </form>
 </div>
 
@@ -113,5 +120,32 @@
     opacity: 0.9;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createUserForm');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Basic form validation
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.style.borderColor = 'red';
+            } else {
+                field.style.borderColor = '#ddd';
+            }
+        });
+        
+        if (isValid) {
+            form.submit();
+        }
+    });
+});
+</script>
 
 @endsection
