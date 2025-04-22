@@ -163,3 +163,193 @@
         }
     </style>
 @endsection
+
+@extends('layouts.nav')
+
+@section('content')
+<div class="page-container">
+    <div class="header-section">
+        <h2>Schools</h2>
+        <a href="{{ route('training.schools.create') }}" class="add-button">Add New School</a>
+    </div>
+
+    <div class="content-wrapper">
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th width="15%">ID</th>
+                        <th width="55%">School</th>
+                        <th width="30%">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $schools = $schools ?? collect([]);
+                    @endphp
+                    
+                    @if($schools->isNotEmpty())
+                        @foreach($schools as $school)
+                            <tr>
+                                <td>{{ $school->school_id ?? 'N/A' }}</td>
+                                <td>{{ $school->name ?? 'N/A' }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ route('training.schools.show', $school) }}" class="action-btn view">
+                                            <i class="fas fa-eye"></i>
+                                            view
+                                        </a>
+                                        <a href="{{ route('training.schools.edit', $school) }}" class="action-btn edit">
+                                            <i class="fas fa-edit"></i>
+                                            edit
+                                        </a>
+                                        <form action="{{ route('training.schools.destroy', $school) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="action-btn delete" onclick="return confirm('Are you sure?')">
+                                                <i class="fas fa-trash"></i>
+                                                delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="3" class="empty-message">No schools found. Click "Add New School" to create one.</td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.page-container {
+    padding: 20px 40px 20px 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.header-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.header-section h2 {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
+}
+
+.add-button {
+    background: #ff9933;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    border: none;
+}
+
+.content-wrapper {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow: hidden;
+    width: 100%;
+}
+
+.table-container {
+    width: 100%;
+}
+
+.custom-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.custom-table th:first-child {
+    width: 200px;
+}
+
+.custom-table th:last-child {
+    width: 300px;
+}
+
+.custom-table th {
+    background: #4CAF50;
+    color: white;
+    padding: 16px 24px;
+    text-align: left;
+    font-weight: normal;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.custom-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid #eee;
+    background: #f8f9fa;
+    font-size: 14px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    width: auto;
+    min-width: 40px;
+    height: 35px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    font-size: 14px;
+    gap: 4px;
+}
+
+.view {
+    background: #17a2b8;
+}
+
+.edit {
+    background: #28a745;
+}
+
+.delete {
+    background: #dc3545;
+}
+
+.empty-message {
+    text-align: center;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .page-container {
+        padding: 16px;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .custom-table {
+        min-width: 1000px;
+    }
+}
+</style>
+@endsection
