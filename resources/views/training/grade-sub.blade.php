@@ -1,6 +1,36 @@
 @extends('layouts.nav')
 
 @section('content')
+    <div class="container">
+        <h1>Grade Submissions</h1>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Class ID</th>
+                    <th>Class Name</th>
+                    <th>School</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($classes as $class)
+                    <tr>
+                        <td>{{ $class->class_id }}</td>
+                        <td>{{ $class->name }}</td>
+                        <td>{{ $class->school->name }}</td>
+                        <td>
+                            <a href="{{ route('training.schools.classes.show', [$class->school->school_id, $class->class_id]) }}" class="btn btn-primary">View Class</a>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+@endsection
+
+@extends('layouts.nav')
+
+@section('content')
     <div class="header-container">
         <h1>Grade Submission</h1>
         @if(isset($class))
