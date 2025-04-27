@@ -50,7 +50,7 @@
 
         <main class="content">
                 @yield('content')
-            </main>
+        </main>
     </div>
 
     <script>
