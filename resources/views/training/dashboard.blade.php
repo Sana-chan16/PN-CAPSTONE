@@ -44,7 +44,7 @@
     <h1 style="font-weight:300;  color: #333;">Sex by Batch Analytics</h1>
     <hr style="margin-top: -20px;>
     <div class="options">
-    <select id="batchFilter" style="width:110px; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+    <select id="batchFilter" style="margin-left: 40px; margin-bottom: 5px; width:110px; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
                     <option value="all">All Batches</option>
                     @foreach($batchCounts->keys() as $batch)
                         <option value="{{ $batch }}">Batch {{ $batch }}</option>

@@ -131,10 +131,13 @@
             <button type="button" id="add-subject" class="btn-add">Add Subject</button>
         </div>
 
-
-
-
-
+        <div class="classes-section">
+            <h3>Classes</h3>
+            <div id="classes-container">
+                <!-- Classes will be added dynamically -->
+            </div>
+            <button type="button" id="add-class" class="btn-add">Add Class</button>
+        </div>
 
         <div class="form-actions">
             <button type="submit" class="btn-submit">Update School</button>
@@ -143,8 +146,55 @@
     </form>
 </div>
 
+<!-- Student Selection Modal -->
+<div id="studentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Select Students</h3>
+            <button type="button" class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="filter-section">
+                <select id="batchFilter">
+                    <option value="">All Batches</option>
+                    @foreach($batches as $batch)
+                        <option value="{{ $batch->batch }}">{{ $batch->batch }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div id="modalStudentsContainer" class="students-list">
+                <!-- Students will be loaded here -->
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-submit" id="confirmStudentSelection">Confirm Selection</button>
+            <button type="button" class="btn-cancel close-modal">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    let currentClassIndex = null;
+    const modal = document.getElementById('studentModal');
+    const closeButtons = document.querySelectorAll('.close-modal');
+    const confirmButton = document.getElementById('confirmStudentSelection');
+    const batchFilter = document.getElementById('batchFilter');
+
+    // Close modal when clicking close button or outside the modal
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+
+    // Grade range configuration
     const rangeInputs = document.querySelectorAll('input[name="grade_range"]');
     const passingRangeSpan = document.querySelector('#passingRange span');
     const failingRangeSpan = document.querySelector('#failingRange span');
@@ -171,20 +221,92 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Subject management
     let subjectCount = {{ count(old('subjects', $school->subjects ?? [])) }};
+    document.getElementById('add-subject').addEventListener('click', function() {
+        const container = document.getElementById('subjects-container');
+        const row = document.createElement('div');
+        row.className = 'subject-row';
+        row.innerHTML = `
+            <input type="text" name="subjects[${subjectCount}][offer_code]" placeholder="Offer Code" required>
+            <input type="text" name="subjects[${subjectCount}][name]" placeholder="Subject Name" required>
+            <input type="text" name="subjects[${subjectCount}][instructor]" placeholder="Instructor" required>
+            <input type="text" name="subjects[${subjectCount}][schedule]" placeholder="Schedule" required>
+            <button type="button" class="btn-remove" onclick="removeSubject(this)">×</button>
+        `;
+        container.appendChild(row);
+        subjectCount++;
+    });
 
-    const container = document.getElementById('subjects-container');
-    const row = document.createElement('div');
-    row.className = 'subject-row';
-    row.innerHTML = `
-        <input type="text" name="subjects[${subjectCount}][offer_code]" placeholder="Offer Code" required>
-        <input type="text" name="subjects[${subjectCount}][name]" placeholder="Subject Name" required>
-        <input type="text" name="subjects[${subjectCount}][instructor]" placeholder="Instructor" required>
-        <input type="text" name="subjects[${subjectCount}][schedule]" placeholder="Schedule" required>
-        <button type="button" class="btn-remove" onclick="removeSubject(this)">×</button>
-    `;
-    container.appendChild(row);
-    subjectCount++;
+    // Class management
+    let classCount = 0;
+    document.getElementById('add-class').addEventListener('click', function() {
+        const container = document.getElementById('classes-container');
+        const row = document.createElement('div');
+        row.className = 'class-row';
+        row.innerHTML = `
+            <div class="class-header">
+                <input type="text" name="classes[${classCount}][class_id]" placeholder="Class ID" required>
+                <input type="text" name="classes[${classCount}][name]" placeholder="Class Name" required>
+                <input type="hidden" name="classes[${classCount}][batch]" class="batch-input">
+                <button type="button" class="btn-select-students" data-class-index="${classCount}">Select Students</button>
+                <button type="button" class="btn-remove" onclick="removeClass(this)">×</button>
+            </div>
+            <div class="students-container" id="students-container-${classCount}">
+            </div>
+        `;
+        container.appendChild(row);
+        attachClassEventListeners(row);
+        classCount++;
+    });
+
+    function attachClassEventListeners(classRow) {
+        const selectStudentsBtn = classRow.querySelector('.btn-select-students');
+        selectStudentsBtn.addEventListener('click', function() {
+            currentClassIndex = this.dataset.classIndex;
+            modal.style.display = 'block';
+            loadStudents();
+        });
+    }
+
+    function loadStudents() {
+        const selectedBatch = batchFilter.value;
+        const container = document.getElementById('modalStudentsContainer');
+        const students = @json($students);
+        
+        container.innerHTML = students
+            .filter(student => !selectedBatch || student.batch === selectedBatch)
+            .map(student => `
+                <div class="student-checkbox">
+                    <input type="checkbox" id="modal_student_${student.user_id}" value="${student.user_id}">
+                    <label for="modal_student_${student.user_id}">
+                        ${student.user_id} - ${student.user_fname} ${student.user_mInitial}. ${student.user_lname}
+                        <span class="batch-tag">${student.batch}</span>
+                    </label>
+                </div>
+            `).join('');
+    }
+
+    batchFilter.addEventListener('change', loadStudents);
+
+    confirmButton.addEventListener('click', function() {
+        const selectedStudents = Array.from(document.querySelectorAll('#modalStudentsContainer input[type="checkbox"]:checked'))
+            .map(checkbox => ({
+                id: checkbox.value,
+                name: checkbox.nextElementSibling.textContent.trim()
+            }));
+
+        const container = document.getElementById(`students-container-${currentClassIndex}`);
+        container.innerHTML = selectedStudents.map(student => `
+            <div class="selected-student">
+                <input type="hidden" name="classes[${currentClassIndex}][student_ids][]" value="${student.id}">
+                <span>${student.name}</span>
+                <button type="button" class="btn-remove-student" onclick="removeStudent(this)">×</button>
+            </div>
+        `).join('');
+
+        modal.style.display = 'none';
+    });
 });
 
 function removeSubject(button) {
@@ -193,16 +315,52 @@ function removeSubject(button) {
     updateSubjectIndices();
 }
 
+function removeClass(button) {
+    const row = button.closest('.class-row');
+    row.remove();
+    updateClassIndices();
+}
+
+function removeStudent(button) {
+    const studentElement = button.parentElement;
+    studentElement.remove();
+}
+
 function updateSubjectIndices() {
     const rows = document.querySelectorAll('.subject-row');
     rows.forEach((row, index) => {
         const inputs = row.querySelectorAll('input');
         inputs.forEach(input => {
-            const name = input.name;
-            input.name = name.replace(/\[\d+\]/, `[${index}]`);
+            const name = input.getAttribute('name');
+            if (name) {
+                input.setAttribute('name', name.replace(/\d+/, index));
+            }
         });
     });
-    subjectCount = rows.length;
+}
+
+function updateClassIndices() {
+    const rows = document.querySelectorAll('.class-row');
+    rows.forEach((row, index) => {
+        const inputs = row.querySelectorAll('input');
+        const button = row.querySelector('.btn-select-students');
+        const container = row.querySelector('.students-container');
+        
+        inputs.forEach(input => {
+            const name = input.getAttribute('name');
+            if (name) {
+                input.setAttribute('name', name.replace(/\d+/, index));
+            }
+        });
+
+        if (button) {
+            button.dataset.classIndex = index;
+        }
+
+        if (container) {
+            container.id = `students-container-${index}`;
+        }
+    });
 }
 </script>
 
@@ -420,6 +578,132 @@ function updateSubjectIndices() {
     background-color: #f8d7da;
     border-color: #f5c6cb;
     color: #721c24;
+}
+
+.classes-section {
+    margin-top: 2rem;
+}
+
+.class-row {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+.class-header {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.class-header input[type="text"] {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.btn-select-students {
+    background: #22bbea;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.students-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.selected-student {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-remove-student {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0 0.5rem;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    margin: 10% auto;
+    padding: 1.5rem;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 800px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.close-modal {
+    background: #ff9933;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.filter-section {
+    margin-bottom: 1rem;
+}
+
+.students-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.student-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.batch-tag {
+    background: #e9ecef;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
 }
 
 @media (max-width: 768px) {

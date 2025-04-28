@@ -135,6 +135,19 @@
         background-color: #f8f9fa;
         margin-left: 250px;
     }
+
+    .logout-btn {
+        background: none;
+        border: none;
+        color: #333;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .logout-btn:hover{
+        color:white;
+        background-color: #ff9933;
+    }
 </style>
 
 </head>
@@ -150,11 +163,11 @@
 
             <div class="user-info" style="color: #333; font-weight: 500; display: flex; align-items: center; gap: 15px;">
                 Logged in as: 
-                <span style="color: #ff9933;">
+                <span style=" color:rgb(255, 255, 255);">
                     {{ $user->user_fname }} {{ $user->user_mInitial }} {{ $user->user_lname }} {{ $user->suffix }}
                 </span> 
                 | Role: 
-                <span style="color: #ff9933;">
+                <span style="color:rgb(255, 255, 255);">
                     {{ ucfirst($user->user_role) }}
                 </span>
 

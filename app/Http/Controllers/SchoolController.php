@@ -113,8 +113,15 @@ class SchoolController extends Controller
 
     public function edit(School $school)
     {
-        $school->load('subjects');
-        return view('training.schools.edit', compact('school'));
+        $school->load(['subjects', 'classes.students']);
+        $batches = StudentDetail::select('batch')->distinct()->orderBy('batch')->get();
+        $students = DB::table('pnph_users')
+            ->join('student_details', 'pnph_users.user_id', '=', 'student_details.user_id')
+            ->select('pnph_users.*', 'student_details.batch')
+            ->where('pnph_users.user_role', 'student')
+            ->where('pnph_users.status', 'active')
+            ->get();
+        return view('training.schools.edit', compact('school', 'batches', 'students'));
     }
 
 
@@ -136,6 +143,11 @@ class SchoolController extends Controller
             'subjects.*.name' => 'required|string',
             'subjects.*.instructor' => 'required|string',
             'subjects.*.schedule' => 'required|string',
+            'classes' => 'array',
+            'classes.*.class_id' => 'required|string',
+            'classes.*.name' => 'required|string',
+            'classes.*.student_ids' => 'array',
+            'classes.*.student_ids.*' => 'exists:pnph_users,user_id',
         ]);
 
         try {
@@ -162,6 +174,29 @@ class SchoolController extends Controller
                     'instructor' => $subjectData['instructor'],
                     'schedule' => $subjectData['schedule'],
                 ]);
+            }
+
+            // Update classes
+            if ($request->has('classes')) {
+                // Get existing class IDs
+                $existingClassIds = $school->classes()->pluck('class_id')->toArray();
+                $updatedClassIds = collect($request->classes)->pluck('class_id')->toArray();
+                
+                // Delete classes that are no longer in the request
+                $classesToDelete = array_diff($existingClassIds, $updatedClassIds);
+                ClassModel::whereIn('class_id', $classesToDelete)->delete();
+
+                foreach ($request->classes as $classData) {
+                    $class = ClassModel::firstOrNew(['class_id' => $classData['class_id']]);
+                    $class->name = $classData['name'];
+                    $class->school_id = $school->school_id;
+                    $class->save();
+
+                    // Sync students if provided
+                    if (isset($classData['student_ids'])) {
+                        $class->students()->sync($classData['student_ids']);
+                    }
+                }
             }
 
             DB::commit();
