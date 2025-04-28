@@ -73,11 +73,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/schools/{school}', [SchoolController::class, 'update'])->name('schools.update');
         Route::delete('/schools/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
 
-        // Class routes with school context
-        Route::get('schools/{school}/classes/create', [ClassController::class, 'create'])->name('classes.create');
-        Route::post('schools/{school}/classes', [ClassController::class, 'store'])->name('classes.store');
+        // Class routes
+        Route::resource('classes', ClassController::class);
         Route::get('students/by-batch', [ClassController::class, 'getStudentsList'])->name('students.by-batch');
-        Route::resource('classes', ClassController::class)->except(['create', 'store']);
     });
     
     // Student routes
