@@ -11,9 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('class_student');
-        Schema::dropIfExists('classes');
-
         Schema::create('classes', function (Blueprint $table) {
             $table->id();
             $table->string('class_id')->unique();
@@ -23,21 +20,29 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('school_id')
-                ->references('school_id')
-                ->on('schools')
-                ->onDelete('cascade');
+                  ->references('school_id')
+                  ->on('schools')
+                  ->onDelete('cascade');
         });
 
+        // Create the pivot table for class-student relationship
         Schema::create('class_student', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
+            $table->unsignedBigInteger('class_id');
             $table->string('user_id');
             $table->timestamps();
-            
+
+            $table->foreign('class_id')
+                  ->references('id')
+                  ->on('classes')
+                  ->onDelete('cascade');
+
             $table->foreign('user_id')
-                ->references('user_id')
-                ->on('pnph_users')
-                ->onDelete('cascade');
+                  ->references('user_id')
+                  ->on('pnph_users')
+                  ->onDelete('cascade');
+
+            $table->unique(['class_id', 'user_id']);
         });
     }
 

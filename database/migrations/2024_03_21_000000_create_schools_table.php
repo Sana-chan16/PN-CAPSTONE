@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('department');
             $table->string('course');
             $table->integer('semester_count');
+            $table->string('term_type')->nullable();
             $table->json('terms');
             $table->decimal('passing_grade_min', 3, 1);
             $table->decimal('passing_grade_max', 3, 1);
@@ -26,4 +27,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('schools');
     }
-}; 
+};

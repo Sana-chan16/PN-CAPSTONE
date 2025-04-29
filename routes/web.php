@@ -9,6 +9,8 @@ use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\EducatorController;
+use App\Http\Controllers\Training\GradeSubmissionController;
+use App\Http\Controllers\Student\GradeController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -92,7 +94,12 @@ Route::middleware('auth')->group(function () {
         Route::post('schools/{school}/classes', [ClassController::class, 'store'])->name('classes.store');
         Route::get('students/by-batch', [ClassController::class, 'getStudentsList'])->name('students.by-batch');
         Route::resource('classes', ClassController::class)->except(['create', 'store']);
-    }); // <-- ✅ properly closed here
+        
+        // Grade Submission routes
+        Route::get('/gradesubmission', [GradeSubmissionController::class, 'index'])->name('gradesubmission.index');
+        Route::get('/gradesubmission/{class}', [GradeSubmissionController::class, 'show'])->name('gradesubmission.show');
+        Route::post('/gradesubmission', [GradeSubmissionController::class, 'store'])->name('gradesubmission.store');
+    }); // <-- properly closed here
     
     
 
@@ -107,5 +114,10 @@ Route::middleware('auth')->group(function () {
 
     });
 
+    // Student Grade Routes
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/student/grades', [GradeController::class, 'index'])->name('student.grades.index');
+        Route::post('/student/grades/submit', [GradeController::class, 'submit'])->name('student.grades.submit');
+    });
 
 });

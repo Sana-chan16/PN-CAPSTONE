@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ClassModel extends Model
 {
-    protected $table = 'classes'; // Specify the table name since it differs from model name
+    protected $table = 'classes';
 
     protected $fillable = [
         'class_id',
@@ -16,22 +16,6 @@ class ClassModel extends Model
         'school_id',
         'batch'
     ];
-
-    protected $primaryKey = 'id';
-
-    protected $attributes = [
-        'class_name' => null
-    ];
-
-    protected static function booted()
-    {
-        static::creating(function ($class) {
-            if (isset($class->attributes['name'])) {
-                $class->attributes['class_name'] = $class->attributes['name'];
-                unset($class->attributes['name']);
-            }
-        });
-    }
 
     public function school()
     {
@@ -43,9 +27,4 @@ class ClassModel extends Model
         return $this->belongsToMany(PNUser::class, 'class_student', 'class_id', 'user_id')
             ->withTimestamps();
     }
-
-    public static function test()
-    {
-        return "Model is working";
-    }
-} 
+}

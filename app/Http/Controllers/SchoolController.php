@@ -87,7 +87,7 @@ class SchoolController extends Controller
                 foreach ($validated['classes'] as $classData) {
                     $class = new ClassModel();
                     $class->class_id = $classData['class_id'];
-                    $class->name = $classData['name'];
+                    $class->class_name = $classData['name'];
                     $class->school_id = $school->school_id;
                     $class->batch = $classData['batch'];
                     $class->save();
@@ -188,7 +188,7 @@ class SchoolController extends Controller
 
                 foreach ($request->classes as $classData) {
                     $class = ClassModel::firstOrNew(['class_id' => $classData['class_id']]);
-                    $class->name = $classData['name'];
+                    $class->class_name = $classData['name'];
                     $class->school_id = $school->school_id;
                     $class->save();
 
