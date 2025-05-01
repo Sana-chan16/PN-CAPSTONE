@@ -9,7 +9,7 @@ use App\Http\Controllers\TrainingController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\EducatorController;
-use App\Http\Controllers\Training\GradeSubmissionController;
+use App\Http\Controllers\GradeSubmissionController;
 use App\Http\Controllers\Student\GradeController;
 
 Route::get('/', function () {
@@ -30,48 +30,32 @@ Route::post('/forgot-password/verify', [AuthController::class, 'verifyForgotPass
 Route::get('/reset-password', [AuthController::class, 'showResetPasswordForm'])->name('reset-password');
 Route::post('/reset-password/update', [AuthController::class, 'resetPassword'])->name('reset-password.update');
 
-
-
-
 Route::middleware('auth')->group(function () {
-
-
-    
     // Change Password Routes
     Route::get('/change-password', [AuthController::class, 'showChangePasswordForm'])->name('change-password');
     Route::post('/update-password', [AuthController::class, 'updatePassword'])->name('update-password');
 
     // Logout Route
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    
+
     // Admin routes
     Route::prefix('admin')->name('admin.')->middleware('can:admin-access')->group(function () {
         Route::resource('pnph_users', PNUserController::class);
         Route::get('/dashboard', [PNUserController::class, 'dashboard'])->name('dashboard');
     });
-    
+
     // Educator routes
     Route::prefix('educator')->name('educator.')->middleware('can:educator-access')->group(function () {
         Route::get('/dashboard', [EducatorController::class, 'dashboard'])->name('dashboard');
+        Route::get('/students-info', [EducatorController::class, 'index'])->name('students.index');
+        Route::get('/students/{user_id}/view', [EducatorController::class, 'viewStudent'])->name('students.view');
+    });
 
-    Route::get('/students-info', [EducatorController::class, 'index'])->name('educator.students.index');
-    Route::get('/students/{user_id}/view', [EducatorController::class, 'viewStudent'])->name('students.view');
-    Route::get('/students-info', [EducatorController::class, 'index'])->name('students.index');
-        
-
-
-});
- 
-
-
-    
-    
     // Training routes
-
     Route::prefix('training')->name('training.')->middleware(['auth', 'can:training-access'])->group(function () {
         Route::get('/dashboard', [TrainingController::class, 'dashboard'])->name('dashboard');
         Route::get('/students-info', [TrainingController::class, 'index'])->name('students-info');
-    
+
         // Student Information Routes
         Route::get('/students/list', [TrainingController::class, 'getStudentsList'])->name('students.list');
         Route::get('/students', [TrainingController::class, 'index'])->name('students.index');
@@ -79,7 +63,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/students/{user_id}/edit', [TrainingController::class, 'edit'])->name('students.edit');
         Route::put('/students/{user_id}', [TrainingController::class, 'update'])->name('students.update');
         Route::delete('/students/{user_id}', [TrainingController::class, 'destroy'])->name('students.destroy');
-    
+
         // School Management Routes
         Route::get('/manage-students', [SchoolController::class, 'index'])->name('manage-students');
         Route::get('/schools/create', [SchoolController::class, 'create'])->name('schools.create');
@@ -88,30 +72,25 @@ Route::middleware('auth')->group(function () {
         Route::get('/schools/{school}/edit', [SchoolController::class, 'edit'])->name('schools.edit');
         Route::put('/schools/{school}', [SchoolController::class, 'update'])->name('schools.update');
         Route::delete('/schools/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
-    
+
         // Class routes with school context
         Route::get('schools/{school}/classes/create', [ClassController::class, 'create'])->name('classes.create');
         Route::post('schools/{school}/classes', [ClassController::class, 'store'])->name('classes.store');
         Route::get('students/by-batch', [ClassController::class, 'getStudentsList'])->name('students.by-batch');
         Route::resource('classes', ClassController::class)->except(['create', 'store']);
-        
-        // Grade Submission routes
-        Route::get('/gradesubmission', [GradeSubmissionController::class, 'index'])->name('gradesubmission.index');
-        Route::get('/gradesubmission/{class}', [GradeSubmissionController::class, 'show'])->name('gradesubmission.show');
-        Route::post('/gradesubmission', [GradeSubmissionController::class, 'store'])->name('gradesubmission.store');
-    }); // <-- properly closed here
-    
-    
 
-
+        //Grade submission routes
+        Route::get('/grade-submissions', [GradeSubmissionController::class, 'index'])->name('grade-submissions.index');
+        Route::get('/grade-submissions/create', [GradeSubmissionController::class, 'create'])->name('grade-submissions.create');
+        Route::post('/grade-submissions', [GradeSubmissionController::class, 'store'])->name('grade-submissions.store');
+        Route::get('/training/subjects/by-school-and-class', [GradeSubmissionController::class, 'getSubjectsBySchoolAndClass']);
+    });
 
     // Student routes
     Route::prefix('student')->name('student.')->middleware('can:student-access')->group(function () {
         Route::get('/dashboard', function () {
             return view('student.dashboard', ['title' => 'Student Dashboard']);
         })->name('dashboard');
-
-
     });
 
     // Student Grade Routes
@@ -119,5 +98,4 @@ Route::middleware('auth')->group(function () {
         Route::get('/student/grades', [GradeController::class, 'index'])->name('student.grades.index');
         Route::post('/student/grades/submit', [GradeController::class, 'submit'])->name('student.grades.submit');
     });
-
 });

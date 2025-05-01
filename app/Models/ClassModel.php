@@ -27,4 +27,14 @@ class ClassModel extends Model
         return $this->belongsToMany(PNUser::class, 'class_student', 'class_id', 'user_id')
             ->withTimestamps();
     }
+
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'class_subject', 'class_id', 'subject_id');
+    }
+
+    public static function test()
+    {
+        return "Model is working";
+    }
 }

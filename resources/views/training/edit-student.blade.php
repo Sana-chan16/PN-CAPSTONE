@@ -122,6 +122,8 @@
     @endif
 </div>
 
+<!-- hello bai -->
+
 <script>
 function updateStudentId() {
     const batch = document.getElementById('batch').value;
