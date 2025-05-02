@@ -154,6 +154,8 @@ class TrainingController extends Controller
             'user_email' => 'required|email|unique:pnph_users,user_email,' . $user_id . ',user_id',
         ]);
 
+        // ajdaijbdawi
+
         // diri na part ha
 
         // Generate the student ID

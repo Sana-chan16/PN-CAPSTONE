@@ -3,6 +3,8 @@
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/training/view-student.css') }}">
 
+<!-- ahdywaad -->
+
 <div class="view-student-container">
     <h1>Student Details</h1>
 
