@@ -47,6 +47,13 @@ class ClassController extends Controller
             // If there are student IDs, attach them to the class
             if ($request->has('student_ids')) {
                 $class->students()->attach($request->student_ids);
+                
+                // Update student_details with school_id and class_id
+                StudentDetail::whereIn('user_id', $request->student_ids)
+                    ->update([
+                        'school_id' => $class->school_id,
+                        'class_id' => $class->class_id
+                    ]);
             }
 
             return redirect()
@@ -84,8 +91,30 @@ class ClassController extends Controller
             // Update students
             if ($request->has('student_ids')) {
                 $class->students()->sync($request->student_ids);
+                
+                // Update student_details for assigned students
+                StudentDetail::whereIn('user_id', $request->student_ids)
+                    ->update([
+                        'school_id' => $class->school_id,
+                        'class_id' => $class->class_id
+                    ]);
+                
+                // Clear school_id and class_id for students removed from the class
+                StudentDetail::where('class_id', $class->class_id)
+                    ->whereNotIn('user_id', $request->student_ids)
+                    ->update([
+                        'school_id' => null,
+                        'class_id' => null
+                    ]);
             } else {
                 $class->students()->detach();
+                
+                // Clear school_id and class_id for all students previously in the class
+                StudentDetail::where('class_id', $class->class_id)
+                    ->update([
+                        'school_id' => null,
+                        'class_id' => null
+                    ]);
             }
 
             return redirect()->route('training.schools.show', ['school' => $class->school_id])

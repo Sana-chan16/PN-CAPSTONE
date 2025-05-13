@@ -199,12 +199,14 @@
                     </a>
                 </li>
 
+                
+
                 <li class="dropdown {{ request()->routeIs('training.manage-students') || request()->routeIs('training.schools') || request()->routeIs('training.classes.*') ? 'active' : '' }}" id="manageDropdown">
                     <a href="#" onclick="toggleDropdown(event)">
                         <img src="{{ asset('images/ms.png') }}" alt="Manage Students"> Manage Students
                     </a>
                     <div class="dropdown-content">
-                        <a href="{{ route('training.manage-students') }}" class="{{ request()->routeIs('training.schools') ? 'active' : '' }}">
+                        <a href="{{ route('training.manage-students') }}" class="{{ request()->routeIs('training.manage-students') ? 'active' : '' }}">
                             <img src="{{ asset('images/school.png') }}" alt="Schools"> Schools
                         </a>
                         <a href="{{ route('training.classes.index') }}" class="{{ request()->routeIs('training.classes.*') ? 'active' : '' }}">
@@ -212,13 +214,24 @@
                         </a>
                     </div>
                 </li>
-
-
-                <li>
-                    <a href="#">
+                
+                <li class="dropdown {{ request()->routeIs('training.grade-submissions.*') ? 'active' : '' }}" id="gradeSubmissionDropdown">
+                    <a href="#" onclick="toggleDropdown(event)">
                         <img src="{{ asset('images/gs.png') }}" alt="Grade Submission"> Grade Submission
                     </a>
+                    <div class="dropdown-content">
+                        <a href="{{ route('training.grade-submissions.index') }}" class="{{ request()->routeIs('training.grade-submissions.index') ? 'active' : '' }}">
+                            <img src="{{ asset('images/recent.png') }}" alt="Recent"> Recent
+                        </a>
+                        <a href="{{ route('training.grade-submissions.create') }}" class="{{ request()->routeIs('training.grade-submissions.create') ? 'active' : '' }}">
+                            <img src="{{ asset('images/Create.png') }}" alt="Create"> Create
+                        </a>
+                        <a href="{{ route('training.grade-submissions.monitor') }}" class="{{ request()->routeIs('training.grade-submissions.monitor') ? 'active' : '' }}">
+                            <img src="{{ asset('images/monitor.png') }}" alt="Monitor"> Monitor
+                        </a>
+                    </div>
                 </li>
+
                 <li>
                     <a href="#">
                         <img src="{{ asset('images/analytics.png') }}" alt="Analytics"> Analytics
@@ -249,12 +262,11 @@
 
     function toggleDropdown(event) {
         event.preventDefault();
-        const dropdown = document.getElementById('manageDropdown');
+        const dropdown = event.currentTarget.parentElement;
         dropdown.classList.toggle('active');
     }
 
-    
-     function confirmLogout() {
+    function confirmLogout() {
             if (confirm("Are you sure you want to log out?")) {
                 document.getElementById('logout-form').submit();
             }
@@ -264,6 +276,7 @@
 
 @stack('scripts')
 
-   
+@yield('scripts')
+
 </body>
 </html>

@@ -19,22 +19,20 @@ class School extends Model
         'department',
         'course',
         'semester_count',
-        'term_type',
         'terms',
         'passing_grade_min',
         'passing_grade_max',
-        'failing_grade_min', // Added
-        'failing_grade_max'  // Added
+        'failing_grade_min',
+        'failing_grade_max'
     ];
 
     protected $casts = [
         'semester_count' => 'integer',
-        'term_type' => 'string',
         'terms' => 'array',
         'passing_grade_min' => 'decimal:1',
         'passing_grade_max' => 'decimal:1',
-        'failing_grade_min' => 'decimal:1', // Added
-        'failing_grade_max' => 'decimal:1'  // Added
+        'failing_grade_min' => 'decimal:1',
+        'failing_grade_max' => 'decimal:1'
     ];
 
     public function getRouteKeyName()

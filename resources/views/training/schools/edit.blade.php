@@ -1,3 +1,238 @@
+<link rel="stylesheet" href="{{ asset('css/training/school/create.css') }}">
+<link rel="stylesheet" href="{{ asset('css/training/student-selection.css') }}">
+<style>
+.page-container {
+    padding: 20px;
+    max-width: 100%;
+}
+.header-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.header-section h2 {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
+}
+.form-container {
+    background: white;
+    padding: 24px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #333;
+    font-weight: 500;
+}
+.form-group input[type="text"],
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.form-group input[type="text"]:focus,
+.form-group input[type="number"]:focus {
+    border-color: #4CAF50;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+.checkbox-group {
+    display: flex;
+    gap: 16px;
+}
+.subjects-section, .classes-section {
+    margin-top: 32px;
+}
+.subject-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.btn-remove {
+    background: #c62828;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-remove:hover {
+    background: #b71c1c;
+}
+.card {
+    background: #f9f9f9;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+    padding: 16px;
+    margin-bottom: 18px;
+}
+.badge, .selected-student-tag {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #388e3c;
+    border-radius: 16px;
+    padding: 4px 12px;
+    margin: 2px 6px 2px 0;
+    font-size: 13px;
+    font-weight: 500;
+    position: relative;
+}
+.badge .remove-student, .selected-student-tag .remove-student {
+    background: transparent;
+    border: none;
+    color: #c62828;
+    font-size: 15px;
+    margin-left: 7px;
+    cursor: pointer;
+    position: absolute;
+    right: 3px;
+    top: 2px;
+}
+.btn-add {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 7px 16px;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+}
+.btn-add:hover {
+    background: #388e3c;
+}
+.btn-select-students {
+    background: #fff;
+    color: #4CAF50;
+    border: 1px solid #4CAF50;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 7px;
+    transition: background 0.2s, color 0.2s;
+}
+.btn-select-students:hover {
+    background: #4CAF50;
+    color: #fff;
+}
+.form-actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 16px;
+}
+.btn-submit {
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.btn-submit:hover {
+    background: #388e3c;
+}
+.btn-cancel {
+    background: #eee;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 24px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-decoration: none;
+}
+.btn-cancel:hover {
+    background: #ddd;
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow: auto;
+}
+.modal-content {
+    background: #fff;
+    margin: auto;
+    padding: 24px 32px;
+    border-radius: 8px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+.close-modal {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: #888;
+    cursor: pointer;
+    position: absolute;
+    right: 16px;
+    top: 16px;
+}
+@media (max-width: 768px) {
+    .page-container {
+        padding: 16px;
+    }
+    .form-container {
+        padding: 12px;
+    }
+    .modal-content {
+        padding: 12px 8px;
+    }
+}
+.selected-student-tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin: 4px;
+    font-size: 0.9rem;
+}
+
+.selected-student-tag .remove-student {
+    background: none;
+    border: none;
+    color: #1976d2;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0 4px;
+}
+
+.selected-student-tag .remove-student:hover {
+    color: #1565c0;
+}
+</style>
+
 @extends('layouts.nav')
 
 @section('content')
@@ -13,8 +248,18 @@
     @endif
 
     @if(session('error'))
-        <div class="alert alert-error">
+        <div class="alert alert-danger">
             {{ session('error') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -24,7 +269,7 @@
 
         <div class="form-group">
             <label for="school_id">School ID</label>
-            <input type="text" id="school_id" name="school_id" value="{{ old('school_id', $school->school_id) }}" required>
+            <input type="text" id="school_id" name="school_id" value="{{ old('school_id', $school->school_id) }}" required readonly>
             @error('school_id')
                 <div class="error-message">{{ $message }}</div>
             @enderror
@@ -88,7 +333,6 @@
             </div>
         </div>
 
-        
         <div class="form-group">
             <label>Terms</label>
             <div class="checkbox-group">
@@ -119,10 +363,11 @@
             <div id="subjects-container">
                 @foreach(old('subjects', $school->subjects ?? []) as $index => $subject)
                     <div class="subject-row">
-                        <input type="text" name="subjects[{{ $index }}][offer_code]" placeholder="Offer Code" value="{{ $subject['offer_code'] ?? '' }}" required>
-                        <input type="text" name="subjects[{{ $index }}][name]" placeholder="Subject Name" value="{{ $subject['name'] ?? '' }}" required>
-                        <input type="text" name="subjects[{{ $index }}][instructor]" placeholder="Instructor" value="{{ $subject['instructor'] ?? '' }}" required>
-                        <input type="text" name="subjects[{{ $index }}][schedule]" placeholder="Schedule" value="{{ $subject['schedule'] ?? '' }}" required>
+                        <input type="hidden" name="subjects[{{ $index }}][id]" value="{{ $subject['id'] ?? ($subject->id ?? '') }}">
+                        <input type="text" name="subjects[{{ $index }}][offer_code]" placeholder="Offer Code" value="{{ $subject['offer_code'] ?? ($subject->offer_code ?? '') }}" required>
+                        <input type="text" name="subjects[{{ $index }}][name]" placeholder="Subject Name" value="{{ $subject['name'] ?? ($subject->name ?? '') }}" required>
+                        <input type="text" name="subjects[{{ $index }}][instructor]" placeholder="Instructor" value="{{ $subject['instructor'] ?? ($subject->instructor ?? '') }}" required>
+                        <input type="text" name="subjects[{{ $index }}][schedule]" placeholder="Schedule" value="{{ $subject['schedule'] ?? ($subject->schedule ?? '') }}" required>
                         <button type="button" class="btn-remove" onclick="removeSubject(this)">×</button>
                     </div>
                 @endforeach
@@ -133,7 +378,30 @@
         <div class="classes-section">
             <h3>Classes</h3>
             <div id="classes-container">
-                <!-- Classes will be added dynamically -->
+                @php
+                    $editClasses = $classes;
+                @endphp
+                @foreach($editClasses as $index => $class)
+                    <div class="class-row card">
+                        <div class="class-header">
+                            <input type="text" name="classes[{{ $index }}][class_id]" placeholder="Class ID" value="{{ $class['class_id'] ?? '' }}" required>
+                            <input type="text" name="classes[{{ $index }}][name]" placeholder="Class Name" value="{{ $class['name'] ?? '' }}" required>
+                            <input type="hidden" name="classes[{{ $index }}][batch]" class="batch-input" value="{{ $class['batch'] ?? '' }}">
+                            <button type="button" class="btn-select-students" data-class-index="{{ $index }}">Select Students</button>
+                        </div>
+                        <div class="students-container" id="students-container-{{ $index }}">
+                            @if(isset($class['students']))
+                                @foreach($class['students'] as $student)
+                                    <span class="selected-student-tag badge" data-student-id="{{ $student['user_id'] }}">
+                                        {{ $student['student_id'] }} - {{ $student['name'] }}
+                                        <input type="hidden" name="classes[{{ $index }}][student_ids][]" value="{{ $student['user_id'] }}">
+                                        <button type="button" class="remove-student">×</button>
+                                    </span>
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
             </div>
             <button type="button" id="add-class" class="btn-add">Add Class</button>
         </div>
@@ -160,6 +428,7 @@
                         <option value="{{ $batch->batch }}">{{ $batch->batch }}</option>
                     @endforeach
                 </select>
+                <input type="text" id="studentSearch" class="search-input" placeholder="Search students...">
             </div>
             <div id="modalStudentsContainer" class="students-list">
                 <!-- Students will be loaded here -->
@@ -173,19 +442,112 @@
 </div>
 
 <script>
+console.log('Edit school JS loaded'); // DEBUG: Confirm JS runs
+
 document.addEventListener('DOMContentLoaded', function() {
-    let currentClassIndex = null;
+    // --- Add Subject Logic ---
+    const addSubjectButton = document.getElementById('add-subject');
+    const subjectsContainer = document.getElementById('subjects-container');
+    let subjectIndex = subjectsContainer ? subjectsContainer.children.length : 0;
+
+    if(addSubjectButton && subjectsContainer) {
+        addSubjectButton.addEventListener('click', function() {
+            const subjectRow = document.createElement('div');
+            subjectRow.className = 'subject-row';
+            const fields = [
+                { name: 'offer_code', placeholder: 'Offer Code' },
+                { name: 'name', placeholder: 'Subject Name' },
+                { name: 'instructor', placeholder: 'Instructor' },
+                { name: 'schedule', placeholder: 'Schedule' }
+            ];
+            fields.forEach(field => {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = `subjects[${subjectIndex}][${field.name}]`;
+                input.placeholder = field.placeholder;
+                input.required = true;
+                subjectRow.appendChild(input);
+            });
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'btn-remove';
+            removeButton.textContent = '×';
+            removeButton.onclick = function() { removeSubject(this); };
+            subjectRow.appendChild(removeButton);
+            subjectsContainer.appendChild(subjectRow);
+            subjectIndex++;
+            console.log('[DEBUG] Subject added. New subjectIndex:', subjectIndex);
+        });
+    }
+
+    window.removeSubject = function(button) {
+        button.closest('.subject-row').remove();
+        console.log('[DEBUG] Subject removed');
+    };
+
+    // --- Add Class Logic ---
+    const addClassButton = document.getElementById('add-class');
+    const classesContainer = document.getElementById('classes-container');
+    let classIndex = classesContainer ? classesContainer.children.length : 0;
+
+    if(addClassButton && classesContainer) {
+        addClassButton.addEventListener('click', function() {
+            const classRow = document.createElement('div');
+            classRow.className = 'class-row card';
+            classRow.innerHTML = `
+                <div class="class-header">
+                    <input type="text" name="classes[${classIndex}][class_id]" placeholder="Class ID" required>
+                    <input type="text" name="classes[${classIndex}][name]" placeholder="Class Name" required>
+                    <input type="hidden" name="classes[${classIndex}][batch]" class="batch-input">
+                    <button type="button" class="btn-select-students" data-class-index="${classIndex}">Select Students</button>
+                </div>
+                <div class="students-container" id="students-container-${classIndex}"></div>
+            `;
+            classesContainer.appendChild(classRow);
+            classIndex++;
+            console.log('[DEBUG] Class added. New classIndex:', classIndex);
+        });
+    }
+
+    window.removeClass = function(button) {
+        button.closest('.class-row').remove();
+        console.log('[DEBUG] Class removed');
+    };
+
+    // --- Select Students Modal Logic ---
     const modal = document.getElementById('studentModal');
     const closeButtons = document.querySelectorAll('.close-modal');
     const confirmButton = document.getElementById('confirmStudentSelection');
     const batchFilter = document.getElementById('batchFilter');
+    let currentClassIndex = null;
 
-    // Close modal when clicking close button or outside the modal
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            modal.style.display = 'none';
+    if(classesContainer) {
+        classesContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-select-students')) {
+                const classIndex = e.target.getAttribute('data-class-index');
+                console.log('[DEBUG] Select Students clicked. Class index:', classIndex);
+                openStudentModal(classIndex);
+            }
         });
-    });
+    }
+
+    function openStudentModal(classIndex) {
+        currentClassIndex = classIndex;
+        if (!modal) {
+            alert('Modal not found!');
+            return;
+        }
+        modal.style.display = 'block';
+        loadStudentsByBatch(batchFilter.value);
+    }
+
+    if(closeButtons) {
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        });
+    }
 
     window.addEventListener('click', (event) => {
         if (event.target === modal) {
@@ -193,532 +555,123 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Grade range configuration
-    const rangeInputs = document.querySelectorAll('input[name="grade_range"]');
-    const passingRangeSpan = document.querySelector('#passingRange span');
-    const failingRangeSpan = document.querySelector('#failingRange span');
-    const passingGradeMin = document.getElementById('passingGradeMin');
-    const passingGradeMax = document.getElementById('passingGradeMax');
-
-    function updateGradeRanges(value) {
-        if (value === '1') {
-            passingRangeSpan.textContent = '1.0 - 3.0';
-            failingRangeSpan.textContent = '3.1 - 5.0';
-            passingGradeMin.value = '1.0';
-            passingGradeMax.value = '3.0';
-        } else {
-            passingRangeSpan.textContent = '3.0 - 5.0';
-            failingRangeSpan.textContent = '1.0 - 2.9';
-            passingGradeMin.value = '3.0';
-            passingGradeMax.value = '5.0';
-        }
-    }
-
-    rangeInputs.forEach(input => {
-        input.addEventListener('change', (e) => {
-            updateGradeRanges(e.target.value);
-        });
-    });
-
-    // Subject management
-    let subjectCount = {{ count(old('subjects', $school->subjects ?? [])) }};
-    document.getElementById('add-subject').addEventListener('click', function() {
-        const container = document.getElementById('subjects-container');
-        const row = document.createElement('div');
-        row.className = 'subject-row';
-        row.innerHTML = `
-            <input type="text" name="subjects[${subjectCount}][offer_code]" placeholder="Offer Code" required>
-            <input type="text" name="subjects[${subjectCount}][name]" placeholder="Subject Name" required>
-            <input type="text" name="subjects[${subjectCount}][instructor]" placeholder="Instructor" required>
-            <input type="text" name="subjects[${subjectCount}][schedule]" placeholder="Schedule" required>
-            <button type="button" class="btn-remove" onclick="removeSubject(this)">×</button>
-        `;
-        container.appendChild(row);
-        subjectCount++;
-    });
-
-    // Class management
-    let classCount = 0;
-    document.getElementById('add-class').addEventListener('click', function() {
-        const container = document.getElementById('classes-container');
-        const row = document.createElement('div');
-        row.className = 'class-row';
-        row.innerHTML = `
-            <div class="class-header">
-                <input type="text" name="classes[${classCount}][class_id]" placeholder="Class ID" required>
-                <input type="text" name="classes[${classCount}][name]" placeholder="Class Name" required>
-                <input type="hidden" name="classes[${classCount}][batch]" class="batch-input">
-                <button type="button" class="btn-select-students" data-class-index="${classCount}">Select Students</button>
-                <button type="button" class="btn-remove" onclick="removeClass(this)">×</button>
-            </div>
-            <div class="students-container" id="students-container-${classCount}">
-            </div>
-        `;
-        container.appendChild(row);
-        attachClassEventListeners(row);
-        classCount++;
-    });
-
-    function attachClassEventListeners(classRow) {
-        const selectStudentsBtn = classRow.querySelector('.btn-select-students');
-        selectStudentsBtn.addEventListener('click', function() {
-            currentClassIndex = this.dataset.classIndex;
-            modal.style.display = 'block';
-            loadStudents();
+    if(batchFilter) {
+        batchFilter.addEventListener('change', function() {
+            loadStudentsByBatch(this.value);
         });
     }
 
-    function loadStudents() {
-        const selectedBatch = batchFilter.value;
-        const container = document.getElementById('modalStudentsContainer');
-        const students = @json($students);
+    if(confirmButton) {
+        confirmButton.addEventListener('click', function() {
+            const selectedStudents = Array.from(document.querySelectorAll('#modalStudentsContainer input[type="checkbox"]:checked'))
+                .map(checkbox => ({
+                    id: checkbox.value,
+                    name: checkbox.getAttribute('data-name'),
+                    student_id: checkbox.getAttribute('data-student-id')
+                }));
+            const selectedBatch = batchFilter.value;
+            const batchInput = document.querySelector(`input[name="classes[${currentClassIndex}][batch]"]`);
+            if (batchInput) {
+                batchInput.value = selectedBatch;
+            }
+            updateSelectedStudentsList(currentClassIndex, selectedStudents);
+            modal.style.display = 'none';
+            console.log('[DEBUG] Students selected for class', currentClassIndex, selectedStudents);
+        });
+    }
+
+    function loadStudentsByBatch(batchId, searchTerm = '') {
+        const url = `/training/students/by-batch${batchId ? '?batch_id=' + batchId : ''}`;
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(students => {
+                const container = document.getElementById('modalStudentsContainer');
+                let filteredStudents = students;
+                
+                // Filter by search term if provided
+                if (searchTerm) {
+                    const searchLower = searchTerm.toLowerCase();
+                    filteredStudents = students.filter(student => {
+                        const studentId = `${student.batch}${student.group}${student.student_number}${student.training_code}`;
+                        const fullName = `${student.user_lname}, ${student.user_fname}`;
+                        return studentId.toLowerCase().includes(searchLower) || 
+                               fullName.toLowerCase().includes(searchLower);
+                    });
+                }
+
+                container.innerHTML = filteredStudents.map(student => {
+                    const studentId = `${student.batch}${student.group}${student.student_number}${student.training_code}`;
+                    const fullName = `${student.user_lname}, ${student.user_fname}`;
+                    return `
+                        <div class="student-item">
+                            <input type="checkbox" id="modal_student_${student.user_id}" value="${student.user_id}"
+                                data-name="${fullName}" data-student-id="${studentId}">
+                            <label for="modal_student_${student.user_id}">
+                                <span class="student-id">${studentId}</span>
+                                <span class="student-name">${fullName}</span>
+                                <span class="batch-tag">Batch ${student.batch}</span>
+                            </label>
+                        </div>
+                    `;
+                }).join('');
+
+                // Add click handlers for student items
+                container.querySelectorAll('.student-item').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        if (e.target !== this.querySelector('input[type="checkbox"]')) {
+                            const checkbox = this.querySelector('input[type="checkbox"]');
+                            checkbox.checked = !checkbox.checked;
+                        }
+                    });
+                });
+            })
+            .catch(error => {
+                document.getElementById('modalStudentsContainer').innerHTML = `
+                    <div class="error-message">
+                        Error loading students: ${error.message}
+                    </div>
+                `;
+                console.error('[DEBUG] Error loading students:', error);
+            });
+    }
+
+    // Add search functionality
+    const studentSearch = document.getElementById('studentSearch');
+    if (studentSearch) {
+        studentSearch.addEventListener('input', function() {
+            loadStudentsByBatch(batchFilter.value, this.value);
+        });
+    }
+
+    // Update the updateSelectedStudentsList function
+    window.updateSelectedStudentsList = function(classIndex, students) {
+        const container = document.getElementById(`students-container-${classIndex}`);
+        if (!container) return;
         
-        container.innerHTML = students
-            .filter(student => !selectedBatch || student.batch === selectedBatch)
-            .map(student => `
-                <div class="student-checkbox">
-                    <input type="checkbox" id="modal_student_${student.user_id}" value="${student.user_id}">
-                    <label for="modal_student_${student.user_id}">
-                        ${student.user_id} - ${student.user_fname} ${student.user_mInitial}. ${student.user_lname}
-                        <span class="batch-tag">${student.batch}</span>
-                    </label>
-                </div>
-            `).join('');
-    }
-
-    batchFilter.addEventListener('change', loadStudents);
-
-    confirmButton.addEventListener('click', function() {
-        const selectedStudents = Array.from(document.querySelectorAll('#modalStudentsContainer input[type="checkbox"]:checked'))
-            .map(checkbox => ({
-                id: checkbox.value,
-                name: checkbox.nextElementSibling.textContent.trim()
-            }));
-
-        const container = document.getElementById(`students-container-${currentClassIndex}`);
-        container.innerHTML = selectedStudents.map(student => `
-            <div class="selected-student">
-                <input type="hidden" name="classes[${currentClassIndex}][student_ids][]" value="${student.id}">
-                <span>${student.name}</span>
-                <button type="button" class="btn-remove-student" onclick="removeStudent(this)">×</button>
-            </div>
+        container.innerHTML = students.map(student => `
+            <span class="selected-student-tag" data-student-id="${student.id}">
+                ${student.student_id} - ${student.name}
+                <input type="hidden" name="classes[${classIndex}][student_ids][]" value="${student.id}">
+                <button type="button" class="remove-student">×</button>
+            </span>
         `).join('');
 
+        // Add click handlers for remove buttons
+        container.querySelectorAll('.remove-student').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.parentElement.remove();
+            });
+        });
+    };
+
+    // Ensure modal is hidden on page load
+    if (modal) {
         modal.style.display = 'none';
-    });
+    }
 });
-
-function removeSubject(button) {
-    const row = button.parentElement;
-    row.remove();
-    updateSubjectIndices();
-}
-
-function removeClass(button) {
-    const row = button.closest('.class-row');
-    row.remove();
-    updateClassIndices();
-}
-
-function removeStudent(button) {
-    const studentElement = button.parentElement;
-    studentElement.remove();
-}
-
-function updateSubjectIndices() {
-    const rows = document.querySelectorAll('.subject-row');
-    rows.forEach((row, index) => {
-        const inputs = row.querySelectorAll('input');
-        inputs.forEach(input => {
-            const name = input.getAttribute('name');
-            if (name) {
-                input.setAttribute('name', name.replace(/\d+/, index));
-            }
-        });
-    });
-}
-
-function updateClassIndices() {
-    const rows = document.querySelectorAll('.class-row');
-    rows.forEach((row, index) => {
-        const inputs = row.querySelectorAll('input');
-        const button = row.querySelector('.btn-select-students');
-        const container = row.querySelector('.students-container');
-        
-        inputs.forEach(input => {
-            const name = input.getAttribute('name');
-            if (name) {
-                input.setAttribute('name', name.replace(/\d+/, index));
-            }
-        });
-
-        if (button) {
-            button.dataset.classIndex = index;
-        }
-
-        if (container) {
-            container.id = `students-container-${index}`;
-        }
-    });
-}
 </script>
 
-<style>
-.page-container {
-    padding: 20px;
-    max-width: 100%;
-}
-
-.header-section {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-}
-
-.header-section h2 {
-    font-size: 24px;
-    color: #333;
-    margin: 0;
-}
-
-.form-container {
-    background: white;
-    padding: 24px;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    color: #333;
-    font-weight: 500;
-}
-
-.form-group input[type="text"],
-.form-group input[type="number"] {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.form-group input[type="text"]:focus,
-.form-group input[type="number"]:focus {
-    border-color: #4CAF50;
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-}
-
-.checkbox-group {
-    display: flex;
-    gap: 16px;
-}
-
-.grade-range-selector {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 12px;
-}
-
-.radio-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.grade-info {
-    margin-top: 12px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 4px;
-}
-
-.grade-info div {
-    margin-bottom: 8px;
-    font-size: 14px;
-}
-
-.grade-info div:last-child {
-    margin-bottom: 0;
-}
-
-.grade-info span {
-    font-weight: 500;
-    font-family: monospace;
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-.subjects-section {
-    margin-top: 24px;
-    padding: 16px;
-    background: #f8f9fa;
-    border-radius: 4px;
-}
-
-.subjects-section h3 {
-    margin: 0 0 16px 0;
-    color: #333;
-    font-size: 18px;
-}
-
-.subject-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
-    align-items: center;
-}
-
-.subject-row input {
-    flex: 1;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.btn-remove {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #dc3545;
-    color: white;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-
-.btn-add {
-    background: #28a745;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.form-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.btn-submit {
-    background: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.btn-submit:hover {
-    background: #388e3c;
-    color: white;
-    text-decoration: none;
-    text-align: center;
-}
-
-.btn-cancel {
-    background: #ff9933;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    text-decoration: none;
-    text-align: center;
-}
-
-.btn-cancel:hover {
-    background:rgb(255, 128, 0);
-    color: #000;
-    text-decoration: none;
-    text-align: center;
-}
-
-.error-message {
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: 4px;
-}
-
-.alert {
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    border-radius: 4px;
-}
-
-.alert-success {
-    background-color: #d4edda;
-    border-color: #c3e6cb;
-    color: #155724;
-}
-
-.alert-error {
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-    color: #721c24;
-}
-
-.classes-section {
-    margin-top: 2rem;
-}
-
-.class-row {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    padding: 1rem;
-}
-
-.class-header {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.class-header input[type="text"] {
-    flex: 1;
-    padding: 0.5rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-}
-
-.btn-select-students {
-    background: #22bbea;
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.students-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.5rem;
-}
-
-.selected-student {
-    background: white;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 0.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.btn-remove-student {
-    background: none;
-    border: none;
-    color: #dc3545;
-    cursor: pointer;
-    font-size: 1.2rem;
-    padding: 0 0.5rem;
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-}
-
-.modal-content {
-    background: white;
-    margin: 10% auto;
-    padding: 1.5rem;
-    border-radius: 8px;
-    width: 80%;
-    max-width: 800px;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.close-modal {
-    background: #ff9933;
-    border: none;
-    font-size: 15px;
-    cursor: pointer;
-}
-
-.filter-section {
-    margin-bottom: 1rem;
-}
-
-.students-list {
-    max-height: 400px;
-    overflow-y: auto;
-    margin-bottom: 1rem;
-}
-
-.student-checkbox {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.batch-tag {
-    background: #e9ecef;
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    margin-left: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-@media (max-width: 768px) {
-    .page-container {
-        padding: 16px;
-    }
-    
-    .subject-row {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .checkbox-group {
-        flex-direction: column;
-        gap: 8px;
-    }
-}
-</style>
 @endsection 

@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Notifications\Notifiable;
 
 class PNUser extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     // Define the table associated with the model
     protected $table = 'pnph_users';

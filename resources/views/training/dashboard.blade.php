@@ -33,7 +33,7 @@
     <div style="display: flex; flex-direction: column; gap: 30px;">
         <!-- Batch Chart -->
         <div style="background: beige; width: 90%; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 1400px; margin: 0 auto;">
-            <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Students by Batch</h3>
+            <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Students by Batch and Gender</h3>
             <div style="height: 300px;">
                 <canvas id="batchChart"></canvas>
             </div>
@@ -121,10 +121,6 @@
 </div>
 
 
-
-
-
-
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -199,11 +195,22 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: {!! json_encode($batchCounts->keys()) !!},
                 datasets: [{
-                    label: 'Number of Students',
-                    data: {!! json_encode($batchCounts->values()) !!},
+                    label: 'Female',
+                    data: {!! json_encode($batchCounts->map(function($total, $batch) use ($genderByBatch) { 
+                        return $genderByBatch[$batch]['female'] ?? 0;
+                    })->values()) !!},
+                    backgroundColor: '#ff9933',
+                    barPercentage: 0.9,
+                    categoryPercentage: 0.5
+                },
+                {
+                    label: 'Male',
+                    data: {!! json_encode($batchCounts->map(function($total, $batch) use ($genderByBatch) { 
+                        return $genderByBatch[$batch]['male'] ?? 0;
+                    })->values()) !!},
                     backgroundColor: '#22bbea',
-                    barThickness: 100,  // Fixed bar width
-                    maxBarThickness: 150 // Maximum bar width
+                    barPercentage: 0.9,
+                    categoryPercentage: 0.5
                 }]
             },
             options: {
@@ -217,8 +224,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     y: {
                         beginAtZero: true,
+                        max: 70,
                         grid: {
                             color: '#f0f0f0'
+                        },
+                        ticks: {
+                            stepSize: 10
                         }
                     }
                 },
@@ -230,7 +241,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        position: 'top'
                     }
                 }
             }
@@ -246,4 +258,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 @endsection
-

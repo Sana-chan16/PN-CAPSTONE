@@ -172,6 +172,15 @@ class TrainingController extends Controller
     
         // Update or create student details
         if ($student->studentDetail) {
+            // Find the class by the class_id provided in the request (student is assigned to a specific class)
+            $class = null;
+            $class_id = null;
+            $school_id = null;
+            if ($request->has('class_id')) {
+                $class = \App\Models\ClassModel::where('class_id', $request->class_id)->first();
+                $class_id = $class ? $class->class_id : null;
+                $school_id = $class ? $class->school_id : null;
+            }
             $student->studentDetail->update([
                 'batch' => $request->batch,
                 'group' => $request->group,
@@ -179,9 +188,19 @@ class TrainingController extends Controller
                 'training_code' => $request->training_code,
                 'student_id' => $studentId,
                 'gender' => $request->gender,
+                'class_id' => $class_id,
+                'school_id' => $school_id,
             ]);
         } else {
-            StudentDetail::create([
+            $class = null;
+            $class_id = null;
+            $school_id = null;
+            if ($request->has('class_id')) {
+                $class = \App\Models\ClassModel::where('class_id', $request->class_id)->first();
+                $class_id = $class ? $class->class_id : null;
+                $school_id = $class ? $class->school_id : null;
+            }
+            \App\Models\StudentDetail::create([
                 'user_id' => $student->user_id,
                 'batch' => $request->batch,
                 'group' => $request->group,
@@ -189,6 +208,8 @@ class TrainingController extends Controller
                 'training_code' => $request->training_code,
                 'student_id' => $studentId,
                 'gender' => $request->gender,
+                'class_id' => $class_id,
+                'school_id' => $school_id,
             ]);
         }
     

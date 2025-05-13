@@ -13,7 +13,9 @@ class StudentDetail extends Model
         'group',
         'student_number',
         'training_code',
-        'gender'
+        'gender',
+        'school_id',
+        'class_id'
     ];
 
     // Relationship with PNUser model
