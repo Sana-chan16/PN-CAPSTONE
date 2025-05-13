@@ -1,7 +1,7 @@
 @extends('layouts.nav')
 
 @section('content')
-
+<link rel="stylesheet" href="{{ asset('css/training/grade-submissions/create.css') }}">
 
 <h1>Create Grade Submission</h1>
 <hr>
@@ -34,19 +34,25 @@
             <select name="class_id" id="class_id" required>
                 <option value="">-- Select Class --</option>
                 @foreach ($classes as $class)
-                    <option value="{{ $class->class_id }}">{{ $class->class_name }} ({{ $class->batch }})</option>
+                    <option value="{{ $class->class_id }}" data-school-id="{{ $class->school_id }}">{{ $class->class_name }} ({{ $class->batch }})</option>
                 @endforeach
             </select>
         </div>
 
         <div class="form-group">
             <label for="semester">Semester</label>
-            <input type="text" name="semester" id="semester" required>
+            <select name="semester" id="semester" required>
+                <option value="">-- Select Semester --</option>
+                <option value="1st SEMESTER">1st SEMESTER</option>
+                <option value="2nd SEMESTER">2nd SEMESTER</option>
+            </select>
         </div>
 
         <div class="form-group">
             <label for="term">Term</label>
-            <input type="text" name="term" id="term" required>
+            <select name="term" id="term" required>
+                <option value="">-- Select Term --</option>
+            </select>
         </div>
 
         <div class="form-group">
@@ -55,142 +61,119 @@
         </div>
 
         <div class="form-group">
-            <label for="subject_ids">Select Subjects</label>
-            <select name="subject_ids[]" id="subject_ids" multiple required>
-                <!-- Subjects will populate dynamically based on school selection -->
-                @if (!empty($subjects))
-                    @foreach ($subjects as $subject)
-                        <option value="{{ $subject->id }}">{{ $subject->name }} ({{ $subject->offer_code }})</option>
-                    @endforeach
-                @endif
-            </select>
+            <label>Select Subjects</label>
+            <div id="subjects-container" class="checkbox-group">
+                <!-- Subjects will populate here as checkboxes -->
+            </div>
         </div>
 
         <div class="form-actions">
-    <button type="submit" class="btn-submit">Create Submission</button>
-    <a href="{{ route('training.grade-submissions.index') }}" class="btn-cancel">Cancel</a>
-</div>
+            <button type="submit" class="btn-submit">Create Submission</button>
+            <a href="{{ route('training.grade-submissions.index') }}" class="btn-cancel">Cancel</a>
+        </div>
     </form>
 </div>
 
-<!-- JavaScript to reload subjects when school is selected -->
+<!-- JavaScript to fetch subjects when school and class are selected -->
 <script>
-document.getElementById('school_id').addEventListener('change', function () {
-    const schoolId = this.value;
-    const subjectsDropdown = document.getElementById('subject_ids');
-    subjectsDropdown.innerHTML = ''; // Clear the dropdown
+document.addEventListener('DOMContentLoaded', function() {
+    const schoolSelect = document.getElementById('school_id');
+    const classSelect = document.getElementById('class_id');
+    const termSelect = document.getElementById('term');
+    const subjectsContainer = document.getElementById('subjects-container');
 
-    // If a school is selected, reload the page with school_id
-    if (schoolId) {
-        window.location.href = `?school_id=${schoolId}`;
+    // Function to fetch school terms
+    function fetchSchoolTerms(schoolId) {
+        if (!schoolId) {
+            termSelect.innerHTML = '<option value="">-- Select Term --</option>';
+            return;
+        }
+
+        fetch(`/api/schools/${schoolId}/terms`)
+            .then(response => response.json())
+            .then(data => {
+                termSelect.innerHTML = '<option value="">-- Select Term --</option>';
+                data.terms.forEach(term => {
+                    const option = document.createElement('option');
+                    option.value = term;
+                    option.textContent = term.charAt(0).toUpperCase() + term.slice(1).replace('_', ' ');
+                    termSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching terms:', error);
+                termSelect.innerHTML = '<option value="">-- Select Term --</option>';
+            });
+    }
+
+    // Filter classes based on selected school
+    schoolSelect.addEventListener('change', function() {
+        const schoolId = this.value;
+        
+        // Fetch terms for selected school
+        fetchSchoolTerms(schoolId);
+        
+        // Filter classes to show only those belonging to selected school
+        Array.from(classSelect.options).forEach(option => {
+            if (option.value === '') return; // Skip placeholder option
+            const classSchoolId = option.dataset.schoolId;
+            option.style.display = !schoolId || classSchoolId === schoolId ? '' : 'none';
+        });
+
+        // Reset class selection
+        classSelect.value = '';
+        
+        // Clear subjects
+        subjectsContainer.innerHTML = '';
+
+        if (schoolId && classSelect.value) {
+            fetchSubjects(schoolId, classSelect.value);
+        }
+    });
+
+    // Fetch subjects when class is selected
+    classSelect.addEventListener('change', function() {
+        const schoolId = schoolSelect.value;
+        const classId = this.value;
+
+        if (schoolId && classId) {
+            fetchSubjects(schoolId, classId);
+        } else {
+            subjectsContainer.innerHTML = '';
+        }
+    });
+
+    function fetchSubjects(schoolId, classId) {
+        fetch(`/training/subjects/by-school-and-class?school_id=${schoolId}&class_id=${classId}`)
+            .then(response => response.json())
+            .then(subjects => {
+                subjectsContainer.innerHTML = '';
+                if (subjects.length === 0) {
+                    subjectsContainer.innerHTML = '<p>No subjects found for this school and class.</p>';
+                    return;
+                }
+                subjects.forEach(subject => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-item';
+                    div.innerHTML = `
+                        <label>
+                            <input type="checkbox" name="subject_ids[]" value="${subject.id}" required>
+                            ${subject.name} (${subject.offer_code})
+                        </label>
+                    `;
+                    subjectsContainer.appendChild(div);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching subjects:', error);
+                subjectsContainer.innerHTML = '<p class="error">Failed to load subjects. Please try again.</p>';
+            });
+    }
+
+    // If school_id is pre-selected, trigger change event
+    if (schoolSelect.value) {
+        schoolSelect.dispatchEvent(new Event('change'));
     }
 });
 </script>
-
-
-<!-- Simple CSS Styling -->
-<style>
-
-
-h1 {
-    margin-bottom: 20px;
-    font-weight: 300;
-}
-
-hr {
-    margin-bottom: 20px;
-}
-
-.alert.error {
-    background-color: #f8d7da;
-    padding: 10px 15px;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    border-radius: 5px;
-    margin-bottom: 20px;
-}
-
-.form-container {
-    background-color: beige;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    width: 60%;
-    align-items: center;    
-    margin-left: 20%;
-
-}
-
-.form-group {
-    margin:20px;
-}
-
-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
-
-input[type="text"] {
-    width: 600px;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
-
-select{
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    width: 620px;
-}
-
-select[multiple] {
-    height: 150px;
-    width: 630px;
-    
-}
-
-.btn-submit:hover {
-    background-color: #45a049;
-}
-
-
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px; /* Add spacing between buttons */
-}
-
-.btn-cancel {
-    display: block;
-    width: 48%; /* Same width as the submit button */
-    background-color: #f44336; /* Red color for cancel */
-    color: white;
-    font-size: 1rem;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    text-align: center;
-    text-decoration: none; /* Remove underline */
-    cursor: pointer;
-}
-
-.btn-cancel:hover {
-    background-color: #d32f2f; /* Darker red on hover */
-}
-
-.btn-submit {
-    width: 48%; /* Adjust width to match cancel button */
-    background-color: #4CAF50;
-    color: white;
-    font-size: 1rem;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    text-align: center;
-    text-decoration: none; /* Remove underline */
-    cursor: pointer;
-}
-</style>
 @endsection
