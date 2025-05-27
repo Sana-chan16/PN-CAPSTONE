@@ -227,6 +227,9 @@
                         <a href="{{ route('training.grade-submissions.recent') }}" class="{{ request()->routeIs('training.grade-submissions.recent') ? 'active' : '' }}">
                             <img src="{{ asset('images/analytics.png') }}" alt="Recent"> Recent
                         </a>
+                        <a href="#" class="{{ request()->routeIs('training.intern.*') ? 'active' : '' }}">
+                            <img src="{{ asset('images/intern.png') }}" alt="Intern"> Intern
+                        </a>
                     </div>
                 </li>
                 <li>

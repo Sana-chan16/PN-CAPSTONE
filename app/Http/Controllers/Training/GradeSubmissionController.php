@@ -19,6 +19,7 @@ class GradeSubmissionController extends Controller
     {
         // Get the concatenated filter key from the request
         $filterKey = $request->query('filter_key');
+        $classFilters = $request->query('class_filters', []);
 
         // Get all schools
         $schools = School::all();
@@ -28,10 +29,28 @@ class GradeSubmissionController extends Controller
         if ($filterKey) {
             $gradeSubmissionsQuery->where(DB::raw("CONCAT(semester, ' ', term, ' ', academic_year)"), $filterKey);
         }
+
         $gradeSubmissions = $gradeSubmissionsQuery->orderBy('created_at', 'desc')->get();
 
-        // Group grade submissions by school_id
-        $submissionsBySchool = $gradeSubmissions->groupBy('school_id');
+        // Get classes with pending submissions
+        $classesWithSubmissions = ClassModel::whereHas('gradeSubmissions', function($query) use ($gradeSubmissions) {
+            $query->whereIn('id', $gradeSubmissions->pluck('id'));
+        })->get();
+
+        // Group grade submissions by school_id and apply class filters
+        $submissionsBySchool = collect();
+        foreach ($schools as $school) {
+            $schoolSubmissions = $gradeSubmissions->where('school_id', $school->school_id);
+            
+            // Apply class filter for this school if it exists
+            if (isset($classFilters[$school->school_id]) && $classFilters[$school->school_id]) {
+                $schoolSubmissions = $schoolSubmissions->where('class_id', $classFilters[$school->school_id]);
+            }
+            
+            if ($schoolSubmissions->isNotEmpty()) {
+                $submissionsBySchool[$school->school_id] = $schoolSubmissions;
+            }
+        }
 
         // Get unique filter options
         $filterOptions = GradeSubmission::select(DB::raw("CONCAT(semester, ' ', term, ' ', academic_year) AS filter_key"))
@@ -41,7 +60,7 @@ class GradeSubmissionController extends Controller
             ->values()
             ->all();
 
-        return view('training.grade-submissions.monitor', compact('schools', 'submissionsBySchool', 'filterOptions', 'filterKey'));
+        return view('training.grade-submissions.monitor', compact('schools', 'submissionsBySchool', 'filterOptions', 'filterKey', 'classesWithSubmissions', 'classFilters'));
     }
 
     public function create(Request $request)

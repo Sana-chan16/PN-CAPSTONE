@@ -52,4 +52,9 @@ class PNUser extends Authenticatable
     {
         return $query->where('user_role', $role);
     }
+
+    public function getAuthPassword()
+    {
+        return $this->user_password;
+    }
 }

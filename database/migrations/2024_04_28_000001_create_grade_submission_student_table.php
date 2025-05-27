@@ -17,8 +17,8 @@ return new class extends Migration
             $table->enum('status', ['pending', 'submitted', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
 
-            $table->foreign('user_id')->references('user_id')->on('pn_users')->onDelete('cascade');
-            $table->unique(['grade_submission_id', 'user_id', 'subject_id']);
+            $table->foreign('user_id')->references('user_id')->on('pnph_users')->onDelete('cascade');
+            $table->unique(['grade_submission_id', 'user_id', 'subject_id'], 'gss_gs_user_subj_unique');
         });
     }
 

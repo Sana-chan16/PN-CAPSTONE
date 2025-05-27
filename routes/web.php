@@ -11,6 +11,9 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\EducatorController;
 use App\Http\Controllers\Training\GradeSubmissionController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\Training\InternGradeController;
+use Illuminate\Support\Facades\Hash;
+use App\Models\PNUser;
 
 Route::get('/', function () {
     return view('welcome');
@@ -118,6 +121,17 @@ Route::middleware('auth')->group(function () {
             // Temporary route to fix subject associations for a submission
             Route::get('/grade-submissions/{gradeSubmission}/fix-subjects', 'fixSubmissionSubjects')->name('grade-submissions.fix-subjects');
         });
+
+        // Intern Grades Routes
+        Route::resource('intern-grades', InternGradeController::class);
+        
+        // API Routes for Intern Grades
+        Route::get('/api/schools/{school}/interns', function ($school) {
+            return \App\Models\PNUser::where('school_id', $school)
+                ->where('user_role', 'intern')
+                ->select('user_id', 'user_fname', 'user_lname')
+                ->get();
+        });
     }); // <-- ✅ properly closed here
     
     
@@ -134,4 +148,11 @@ Route::middleware('auth')->group(function () {
     });
 
 
+});
+
+Route::get('/debug-password-check', function () {
+    $user = PNUser::where('user_id', 'admin001')->first();
+    if (!$user) return 'User not found';
+    $result = Hash::check('password123', $user->user_password);
+    return $result ? 'Password is valid' : 'Password is INVALID';
 });

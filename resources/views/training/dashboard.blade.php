@@ -26,22 +26,20 @@
             <p>Total No. of Students</p>
         </div>
     </div>
-
-    <h1 style="font-weight:300; margin-bottom: 20px; color: #333;">Student by Batch Analytics</h1>
-    <hr>
+<hr>
     <!-- Charts -->
     <div style="display: flex; flex-direction: column; gap: 30px;">
         <!-- Batch Chart -->
         <div style="background: #fff; width: 95%; border-radius: 12px; padding: 30px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); max-width: 900px; margin: 0 auto 30px auto; display: flex; flex-direction: column; align-items: center;">
-            <h3 style="text-align: center; margin-bottom: 24px; color: #333; font-size: 1.5em; font-weight: 500;">Students by Batch and Gender</h3>
+            <h3 style="text-align: center; margin-bottom: 24px; color: #333; font-size: 1.5em; font-weight: 500;">Students by Class by Gender</h3>
             <div style="height: 340px; width: 100%; max-width: 700px; display: flex; align-items: center; justify-content: center;">
                 <canvas id="batchChart"></canvas>
-            </div>
+            </div> 
         </div>
 
 
 
-    <h1 style="font-weight:300;  color: #333;">Sex by Batch Analytics</h1>
+    <!-- <h1 style="font-weight:300;  color: #333;">Gender by Batch Analytics</h1>
     <hr style="margin-top: -20px;>
     <div class="options">
     <div style="background: #fff; width: 95%; border-radius: 12px; padding: 30px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); max-width: 600px; margin: 30px auto 0 auto; display: flex; flex-direction: column; align-items: center;">
@@ -62,7 +60,7 @@
             <div style="display: flex; align-items: center; gap: 6px;"><span style="display:inline-block;width:18px;height:18px;background:#ff9933;border-radius:50%;"></span> <span style="color:#333;">Female</span></div>
         </div>
     </div>
-    </div>
+    </div> -->
 
     <!-- Recent Items Section -->
     <h1 style="font-weight:300; margin-bottom: 20px; color: #333;">Recent Activity</h1>
@@ -162,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     legend: { display: true },
                     title: {
                         display: true,
-                        text: 'Students by Batch and Gender',
+                        // text: 'Students by Batch and Gender',
                         font: { size: 16 }
                     }
                 },

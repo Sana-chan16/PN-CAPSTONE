@@ -9,12 +9,12 @@ return new class extends Migration
     public function up()
     {
         Schema::table('grade_submission_subject', function (Blueprint $table) {
-            $table->decimal('grade', 5, 2)->nullable()->after('subject_id');
-            $table->enum('status', ['pending', 'submitted', 'approved', 'rejected'])->default('pending')->after('grade');
-            $table->string('user_id')->after('status');
+            // $table->decimal('grade', 5, 2)->nullable()->after('subject_id');
+            // $table->enum('status', ['pending', 'submitted', 'approved', 'rejected'])->default('pending')->after('grade');
+            // $table->string('user_id')->after('status'); // Removed to avoid duplicate column error
             
-            $table->foreign('user_id')->references('user_id')->on('pnph_users')->onDelete('cascade');
-            $table->unique(['grade_submission_id', 'subject_id', 'user_id']);
+            // $table->foreign('user_id')->references('user_id')->on('pnph_users')->onDelete('cascade'); // Removed to avoid duplicate foreign key constraint error
+            // $table->unique(['grade_submission_id', 'subject_id', 'user_id']); // Removed to avoid duplicate/long index name error
         });
     }
 

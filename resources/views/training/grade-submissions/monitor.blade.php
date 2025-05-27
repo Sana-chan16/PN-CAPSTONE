@@ -21,21 +21,38 @@
 
             {{-- Filtering Form --}}
             <div class="filter-section">
-                 <h3>Filter Submissions</h3>
-                 <form action="{{ route('training.grade-submissions.index') }}" method="GET" class="filter-form-custom">
-                     <div class="form-group-custom filter-group">
-                         <label for="filter_key" class="visually-hidden">Semester Term Academic Year</label>
-                         <select name="filter_key" id="filter_key" class="form-control-custom">
-                             <option value="">All Submissions</option>
-                             @foreach ($filterOptions as $option)
-                                 <option value="{{ $option }}" {{ request('filter_key') == $option ? 'selected' : '' }}>{{ $option }}</option>
-                             @endforeach
-                         </select>
-                     </div>
-                     <button type="submit" class="btn-custom btn-primary-custom btn-sm-custom">Filter</button>
-                     <a href="{{ route('training.grade-submissions.index') }}" class="btn-custom btn-secondary-custom btn-sm-custom">Reset</a>
-                 </form>
+                <h3>Filter Submissions</h3>
+                <form action="{{ route('training.grade-submissions.index') }}" method="GET" class="filter-form-custom">
+                    <div class="form-group-custom filter-group">
+                        <label for="filter_key" class="visually-hidden">Semester Term Academic Year</label>
+                        <select name="filter_key" id="filter_key" class="form-control-custom">
+                            <option value="">All Submissions</option>
+                            @foreach ($filterOptions as $option)
+                                <option value="{{ $option }}" {{ request('filter_key') == $option ? 'selected' : '' }}>{{ $option }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-custom btn-primary-custom btn-sm-custom">Filter</button>
+                    <a href="{{ route('training.grade-submissions.index') }}" class="btn-custom btn-secondary-custom btn-sm-custom">Reset</a>
+                </form>
             </div>
+
+            <!-- <div class="filter-section">
+                <h4>Filter Submissions</h4>
+                <form action="{{ route('training.grade-submissions.index') }}" method="GET" class="filter-form-custom">
+                    <div class="filter-group">
+                        <label for="class_filter">Filter by Class:</label>
+                        <select name="class_filter" id="class_filter" class="form-control-custom">
+                            <option value="">All Classes</option>
+                            @foreach($classesWithSubmissions as $class)
+                                <option value="{{ $class->class_id }}" {{ request('class_filter') == $class->class_id ? 'selected' : '' }}>
+                                    {{ $class->class_name }} ({{ $class->batch }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </form>
+            </div> -->
         </div>
     </div>
 
@@ -45,6 +62,27 @@
             <div class="school-container">
                 <div class="school-header">
                     <h3>{{ $school->name }}</h3>
+                </div>
+                <div class="filter-section">
+                    <form action="{{ route('training.grade-submissions.index') }}" method="GET" class="filter-form-custom">
+                        <input type="hidden" name="filter_key" value="{{ request('filter_key') }}">
+                        @foreach($schools as $otherSchool)
+                            @if($otherSchool->school_id != $school->school_id && isset($classFilters[$otherSchool->school_id]))
+                                <input type="hidden" name="class_filters[{{ $otherSchool->school_id }}]" value="{{ $classFilters[$otherSchool->school_id] }}">
+                            @endif
+                        @endforeach
+                        <div class="filter-group" style="display: flex; align-items: center; gap: 10px;">
+                            <select name="class_filters[{{ $school->school_id }}]" id="class_filter_{{ $school->school_id }}" class="form-control-custom" onchange="this.form.submit()">
+                                <option value="">All Classes</option>
+                                @foreach ($classesWithSubmissions->where('school_id', $school->school_id) as $class)
+                                    <option value="{{ $class->class_id }}" {{ isset($classFilters[$school->school_id]) && $classFilters[$school->school_id] == $class->class_id ? 'selected' : '' }}>{{ $class->class_name }}</option>
+                                @endforeach
+                            </select>
+                            <a href="#" class="btn-custom btn-primary-custom" style="height: 38px; line-height: 38px; padding: 0 15px; min-width: 150px; white-space: nowrap;">
+                                View Intern Grades
+                            </a>
+                        </div>
+                    </form>
                 </div>
                 <div class="school-content">
                     @foreach($schoolSubmissions as $gradeSubmission)
@@ -236,44 +274,58 @@
     }
 
     .filter-section {
-        margin-bottom: 20px;
-        padding: 15px;
-        background-color: var(--light-bg);
+        /* margin-bottom: 10px; */
+        padding: 10px;
         border-radius: 5px;
     }
-     .filter-section h3 {
+
+    .filter-section h3 {
         margin-top: 0;
         margin-bottom: 10px;
         font-size: 1.25rem;
         color: var(--dark-text);
-     }
+    }
+
+    .filter-section h4 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+        color: var(--dark-text);
+    }
 
     .filter-form-custom {
         display: flex;
         align-items: center;
-        gap: 15px; /* Space between form elements */
-        flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+        gap: 15px;
+        flex-wrap: wrap;
     }
 
     .form-group-custom.filter-group {
-        margin-bottom: 0; /* Remove margin from form group in flex container */
-        flex-grow: 1; /* Allow the select to grow */
-        max-width: 300px; /* Limit width for better layout */
+        margin-bottom: 0;
+        flex-grow: 1;
+        max-width: 300px;
     }
 
-     .form-control-custom {
-        width: 100%; /* Make select fill its container */
+    .form-control-custom {
+        width: 100%;
         padding: 8px 10px;
         border: 1px solid var(--border-color);
         border-radius: 5px;
         font-size: 1rem;
         box-sizing: border-box;
-     }
-     .form-control-custom:focus {
-         border-color: var(--primary-color);
-         outline: none;
-         box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
-     }
+    }
+
+    /* Add specific width for class filter dropdown */
+    .filter-section .filter-form-custom select.form-control-custom {
+        width: 300px;
+        max-width: 100%;
+    }
+
+    .form-control-custom:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+    }
 
     .visually-hidden {
         position: absolute;
@@ -287,20 +339,24 @@
     }
 
     .btn-custom {
-        padding: 10px 15px;
+        padding: 8px 15px;
         border: none;
         border-radius: 5px;
         cursor: pointer;
-        font-size: 1rem;
+        font-size: 0.9rem;
         transition: background-color 0.3s ease;
         text-decoration: none;
         display: inline-block;
         text-align: center;
+        min-width: 80px; /* Set minimum width for buttons */
+        max-width: 120px; /* Set maximum width for buttons */
     }
 
      .btn-sm-custom {
         padding: 5px 10px;
         font-size: 0.875rem;
+        min-width: 60px; /* Smaller minimum width for small buttons */
+        max-width: 100px; /* Smaller maximum width for small buttons */
      }
 
     .btn-primary-custom {

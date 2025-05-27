@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('user_id')->references('user_id')->on('pnph_users')->onDelete('cascade');
-            $table->unique(['grade_submission_id', 'subject_id', 'user_id']);
+            $table->unique(['grade_submission_id', 'subject_id', 'user_id'], 'gss_gs_subj_user_unique');
         });
     }
 
