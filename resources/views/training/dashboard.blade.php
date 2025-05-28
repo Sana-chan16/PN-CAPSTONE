@@ -5,9 +5,8 @@
 <link rel="stylesheet" href="{{ asset('css/training/dashboard.css') }}">
 
 <div class="dashboard-container" style="padding: 20px;">
-
-    <h1 style="margin-bottom: 20px; color: #333; font-weight: 300;">Dashboard</h1>
-    <hr>
+    <h1 class="text-[2.5rem] font-semibold text-[#2c3e50]">Dashboard</h1>
+    <hr class="mb-8">
 
     <!-- Stats Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">

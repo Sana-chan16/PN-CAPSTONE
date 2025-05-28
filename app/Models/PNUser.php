@@ -47,14 +47,17 @@ class PNUser extends Authenticatable
         return $this->hasOne(StudentDetail::class, 'user_id', 'user_id');
     }
 
+    public function classes()
+    {
+        return $this->belongsToMany(ClassModel::class, 'class_student', 'user_id', 'class_id')
+            ->withTimestamps();
+    }
+
     // Add the role scope
     public function scopeRole(Builder $query, string $role): Builder
     {
         return $query->where('user_role', $role);
     }
 
-    public function getAuthPassword()
-    {
-        return $this->user_password;
-    }
-}
+    
+}   

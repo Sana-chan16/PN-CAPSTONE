@@ -1,12 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Dashboard' }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>{{ config('app.name', 'Laravel') }}</title>
+
+    <!-- Google Fonts - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Scripts and Styles -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <link rel="stylesheet" href="{{ asset('css/nav.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <style>
     body {
@@ -147,10 +159,10 @@
         background-color: #f8f9fa;
         margin-left: 250px;
     }
-</style>
+    </style>
 
 </head>
-<body>
+<body class="font-sans antialiased">
     <div class="top-bar">
         <img class="PN-logo" src="{{ asset('images/PN-logo.png') }}" alt="PN Logo">
 
@@ -227,24 +239,33 @@
                         <a href="{{ route('training.grade-submissions.recent') }}" class="{{ request()->routeIs('training.grade-submissions.recent') ? 'active' : '' }}">
                             <img src="{{ asset('images/analytics.png') }}" alt="Recent"> Recent
                         </a>
-                        <a href="#" class="{{ request()->routeIs('training.intern.*') ? 'active' : '' }}">
+                        <a href="{{ route('training.intern-grades.index') }}" class="{{ request()->routeIs('training.intern-grades.*') ? 'active' : '' }}">
                             <img src="{{ asset('images/intern.png') }}" alt="Intern"> Intern
+                        </a>
+                    </div>
+                </li>
+                <li class="dropdown {{ request()->routeIs('analytics.*') || request()->routeIs('training.intern-grades.progress') ? 'active' : '' }}" id="analyticsDropdown">
+                    <a href="#" onclick="toggleDropdown(event)">
+                        <img src="{{ asset('images/analytics.png') }}" alt="Analytics"> Analytics
+                    </a>
+                    <div class="dropdown-content">
+                        <a href="#" class="{{ request()->routeIs('analytics.class-grades') ? 'active' : '' }}">
+                            <img src="{{ asset('images/class grades.png') }}" alt="Class Grades"> Class Grades
+                        </a>
+                        <a href="#" class="{{ request()->routeIs('analytics.class-subject-progress') ? 'active' : '' }}">
+                            <img src="{{ asset('images/subject progress.png') }}" alt="Class Subject Progress"> Class Subject Progress
+                        </a>
+                        <a href="#" class="{{ request()->routeIs('analytics.subject-intervention') ? 'active' : '' }}">
+                            <img src="{{ asset('images/subject intervention.png') }}" alt="Subject Intervention"> Subject Intervention
+                        </a>
+                        <a href="{{ route('training.intern-grades.progress') }}" class="{{ request()->routeIs('training.intern-grades.progress') ? 'active' : '' }}">
+                            <img src="{{ asset('images/bar-chart-icon.png') }}" alt="Progress Graph"> Internship Grades Progress
                         </a>
                     </div>
                 </li>
                 <li>
                     <a href="#">
-                        <img src="{{ asset('images/analytics.png') }}" alt="Analytics"> Analytics
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
                         <img src="{{ asset('images/is.png') }}" alt="Intervention Status"> Intervention Status
-                    </a>
-                </li>
-                <li>
-                    <a href="#">
-                        <img src="{{ asset('images/me.png') }}" alt="Profile"> Profile
                     </a>
                 </li>
 

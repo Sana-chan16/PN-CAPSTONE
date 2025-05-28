@@ -33,7 +33,11 @@ Route::post('/forgot-password/verify', [AuthController::class, 'verifyForgotPass
 Route::get('/reset-password', [AuthController::class, 'showResetPasswordForm'])->name('reset-password');
 Route::post('/reset-password/update', [AuthController::class, 'resetPassword'])->name('reset-password.update');
 
-
+  Route::prefix('admin')->name('admin.')->middleware('can:admin-access')->group(function () {
+        Route::resource('pnph_users', PNUserController::class);
+        Route::get('/dashboard', [PNUserController::class, 'dashboard'])->name('dashboard');
+    });
+    
 
 
 Route::middleware('auth')->group(function () {
@@ -48,11 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     
     // Admin routes
-    Route::prefix('admin')->name('admin.')->middleware('can:admin-access')->group(function () {
-        Route::resource('pnph_users', PNUserController::class);
-        Route::get('/dashboard', [PNUserController::class, 'dashboard'])->name('dashboard');
-    });
-    
+  
     // Educator routes
     Route::prefix('educator')->name('educator.')->middleware('can:educator-access')->group(function () {
         Route::get('/dashboard', [EducatorController::class, 'dashboard'])->name('dashboard');
@@ -123,15 +123,11 @@ Route::middleware('auth')->group(function () {
         });
 
         // Intern Grades Routes
-        Route::resource('intern-grades', InternGradeController::class);
+        Route::resource('intern-grades', InternGradeController::class)->except(['show']);
         
         // API Routes for Intern Grades
-        Route::get('/api/schools/{school}/interns', function ($school) {
-            return \App\Models\PNUser::where('school_id', $school)
-                ->where('user_role', 'intern')
-                ->select('user_id', 'user_fname', 'user_lname')
-                ->get();
-        });
+        Route::get('/api/schools/{school}/interns', [InternGradeController::class, 'getInternsBySchoolAndClass']);
+        Route::get('intern-grades/progress', [InternGradeController::class, 'progress'])->name('intern-grades.progress');
     }); // <-- ✅ properly closed here
     
     

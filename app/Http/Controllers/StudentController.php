@@ -122,11 +122,16 @@ class StudentController extends Controller
             'grades.*' => [
                 'required',
                 function ($attribute, $value, $fail) {
-                    if (!is_numeric($value) && !in_array(strtoupper($value), ['INC', 'NC', 'DR'])) {
-                        $fail('The grade must be a number between 1.0-5.0 or one of: INC, NC, DR.');
+                    // Check if it's a valid numeric grade (1.0-5.0)
+                    if (is_numeric($value)) {
+                        $value = floatval($value);
+                        if ($value < 1.0 || $value > 5.0) {
+                            $fail('The numeric grade must be between 1.0 and 5.0.');
+                        }
                     }
-                    if (is_numeric($value) && ($value < 1.0 || $value > 5.0)) {
-                        $fail('The numeric grade must be between 1.0 and 5.0.');
+                    // Check if it's a valid special grade (INC, NC, DR)
+                    else if (!in_array(strtoupper($value), ['INC', 'NC', 'DR'])) {
+                        $fail('The grade must be between 1.0-5.0 or one of: INC, NC, DR.');
                     }
                 },
             ],
@@ -142,6 +147,11 @@ class StudentController extends Controller
 
             // Update grades and status in the pivot table (this will always replace old grades, including rejected ones)
             foreach ($validated['grades'] as $subjectId => $grade) {
+                // If it's a numeric grade and doesn't have a decimal point, add .0
+                if (is_numeric($grade) && strpos($grade, '.') === false) {
+                    $grade = floatval($grade) . '.0';
+                }
+                
                 $result = DB::table('grade_submission_subject')
                     ->where('grade_submission_id', $submissionId)
                     ->where('subject_id', $subjectId)
@@ -197,38 +207,54 @@ class StudentController extends Controller
             DB::commit();
 
             return redirect()->route('student.dashboard')->with('success', 'Grades and proof submitted successfully!');
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            \Log::error('Database error submitting grades: ' . $e->getMessage());
+            return redirect()->route('student.dashboard')->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            \Log::error('Validation error submitting grades: ' . $e->getMessage());
+            return redirect()->route('student.dashboard')->with('error', 'Validation error: ' . $e->getMessage());
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error submitting grades: ' . $e->getMessage());
-            return redirect()->route('student.dashboard')->with('error', 'An error occurred while submitting grades.');
+            return redirect()->route('student.dashboard')->with('error', 'An unexpected error occurred: ' . $e->getMessage());
         }
     }
 
     public function viewSubmission($submissionId)
     {
         $user = Auth::user();
+
+        // Get the grade submission
         $gradeSubmission = GradeSubmission::where('id', $submissionId)
             ->whereHas('students', function($query) use ($user) {
                 $query->where('grade_submission_subject.user_id', $user->user_id);
             })
             ->with([
                 'classModel',
-                'subjects',
-                'students' => function($query) use ($user) {
-                    $query->where('grade_submission_subject.user_id', $user->user_id);
-                }
+                'subjects'
             ])
             ->firstOrFail();
 
-        // Get all subjects and their grades for this student
-        $studentSubjectEntries = DB::table('subjects')
-            ->join('grade_submission_subject as gss', 'subjects.id', '=', 'gss.subject_id')
-            ->where('gss.grade_submission_id', $submissionId)
-            ->where('gss.user_id', $user->user_id)
-            ->select('subjects.name as subject_name', 'gss.grade', 'gss.status')
+        // Get the student's subject entries for this submission
+        $studentSubjectEntries = DB::table('grade_submission_subject')
+            ->join('subjects', 'grade_submission_subject.subject_id', '=', 'subjects.id')
+            ->where('grade_submission_id', $submissionId)
+            ->where('user_id', $user->user_id)
+            ->select(
+                'subjects.name as subject_name',
+                'grade_submission_subject.grade',
+                'grade_submission_subject.status'
+            )
             ->get();
 
-        return view('student.view_submission', compact('gradeSubmission', 'studentSubjectEntries'));
+        // Get the proof for this submission
+        $proof = GradeSubmissionProof::where('grade_submission_id', $submissionId)
+            ->where('user_id', $user->user_id)
+            ->first();
+
+        return view('student.view_submission', compact('gradeSubmission', 'studentSubjectEntries', 'proof'));
     }
 
     public function submissionsList(Request $request)

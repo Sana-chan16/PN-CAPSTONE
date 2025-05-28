@@ -4,7 +4,7 @@
 
 <link rel="stylesheet" href="{{ asset('css/training/school.css') }}">
 
-<h1 style="font-weight: 300;">Schools</h1>
+<h1 class="text-4xl font-semibold text-[#2c3e50] mt-6">Schools</h1>
 <hr>
 <div class="page-container">
     <div class="header-section">
@@ -12,6 +12,18 @@
             Add New School
         </a>
     </div>
+
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-md bg-[#dcfce7] border border-[#bbf7d0] text-[#166534]">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="mb-6 p-4 rounded-md bg-[#fee2e2] border border-[#fecaca] text-[#dc2626]">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <div class="table-wrapper">
         <div class="table-header">

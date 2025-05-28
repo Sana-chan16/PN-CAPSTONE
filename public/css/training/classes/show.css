@@ -22,7 +22,7 @@
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    background-color: #ff9933;
+    background-color: #22bbea;
     border: 1px solid #ddd;
     border-radius: 4px;
     color: #333;
@@ -31,7 +31,7 @@
 }
 
 .btn-back:hover {
-    background-color:rgb(253, 126, 0);
+    background-color:#02b3e9;
     text-decoration: none;
     color: white;
 }
@@ -41,8 +41,8 @@
     align-items: center;
     gap: 5px;
     padding: 8px 15px;
-    background-color: #ff9933;
-    color: white;
+    /* background-color: #ff9933; */
+    color: #5a6268;
     border-radius: 4px;
     text-decoration: none;
     font-size: 14px;
@@ -50,8 +50,7 @@
 }
 
 .back-button:hover {
-    background-color: #5a6268;
-    color: white;
+    color: #454b4f;
 }
 
 .back-button i {
@@ -113,7 +112,7 @@
 }
 
 .table th {
-    background-color: #4CAF50;
+    background-color: #22bbea;
     font-weight: 500;
     color: white;
 }

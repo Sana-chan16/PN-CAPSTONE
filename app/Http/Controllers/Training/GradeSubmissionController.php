@@ -17,50 +17,62 @@ class GradeSubmissionController extends Controller
 {
     public function index(Request $request)
     {
-        // Get the concatenated filter key from the request
-        $filterKey = $request->query('filter_key');
-        $classFilters = $request->query('class_filters', []);
-
         // Get all schools
         $schools = School::all();
-
-        // Get all grade submissions, optionally filter by filterKey
-        $gradeSubmissionsQuery = GradeSubmission::query();
-        if ($filterKey) {
-            $gradeSubmissionsQuery->where(DB::raw("CONCAT(semester, ' ', term, ' ', academic_year)"), $filterKey);
+        
+        // Get classes for each school
+        $classesBySchool = collect();
+        foreach($schools as $school) {
+            $classesBySchool[$school->school_id] = ClassModel::where('school_id', $school->school_id)->get();
         }
-
-        $gradeSubmissions = $gradeSubmissionsQuery->orderBy('created_at', 'desc')->get();
-
-        // Get classes with pending submissions
-        $classesWithSubmissions = ClassModel::whereHas('gradeSubmissions', function($query) use ($gradeSubmissions) {
-            $query->whereIn('id', $gradeSubmissions->pluck('id'));
-        })->get();
-
-        // Group grade submissions by school_id and apply class filters
-        $submissionsBySchool = collect();
-        foreach ($schools as $school) {
-            $schoolSubmissions = $gradeSubmissions->where('school_id', $school->school_id);
-            
-            // Apply class filter for this school if it exists
-            if (isset($classFilters[$school->school_id]) && $classFilters[$school->school_id]) {
-                $schoolSubmissions = $schoolSubmissions->where('class_id', $classFilters[$school->school_id]);
-            }
-            
-            if ($schoolSubmissions->isNotEmpty()) {
-                $submissionsBySchool[$school->school_id] = $schoolSubmissions;
+        
+        // Get submissions based on filters
+        $query = GradeSubmission::query();
+        
+        // Apply school filter if selected
+        if ($request->has('school_id') && $request->school_id) {
+            $query->where('school_id', $request->school_id);
+        }
+        
+        // Apply class filter if selected
+        if ($request->has('class_id') && $request->class_id) {
+            $query->where('class_id', $request->class_id);
+        }
+        
+        // Apply semester/term/year filter if selected
+        if ($request->has('filter_key') && $request->filter_key) {
+            $filter = explode(',', $request->filter_key);
+            if (count($filter) === 3) {
+                $query->where('semester', $filter[0])
+                    ->where('term', $filter[1])
+                    ->where('academic_year', $filter[2]);
             }
         }
+        
+        // Get submissions with related data
+        $submissions = $query->with(['students', 'proofs', 'subjects'])->get();
+        
+        // Group submissions by school
+        $submissionsBySchool = $submissions->groupBy('school_id');
 
-        // Get unique filter options
-        $filterOptions = GradeSubmission::select(DB::raw("CONCAT(semester, ' ', term, ' ', academic_year) AS filter_key"))
-            ->distinct()
-            ->pluck('filter_key')
-            ->sortDesc()
-            ->values()
-            ->all();
+        // Get unique filter options from submissions
+        $filterOptions = $submissions->map(function($submission) {
+            return $submission->semester . ',' . $submission->term . ',' . $submission->academic_year;
+        })->unique()->sortDesc()->values();
 
-        return view('training.grade-submissions.monitor', compact('schools', 'submissionsBySchool', 'filterOptions', 'filterKey', 'classesWithSubmissions', 'classFilters'));
+        // Get classes that have submissions
+        $classesWithSubmissions = ClassModel::whereIn('class_id', $submissions->pluck('class_id'))->get();
+
+        return view('training.grade-submissions.monitor', compact(
+            'schools', 
+            'classesBySchool',
+            'submissionsBySchool',
+            'filterOptions',
+            'classesWithSubmissions'
+        ))
+        ->with('filter_key', $request->filter_key)
+        ->with('school_id', $request->school_id)
+        ->with('class_id', $request->class_id);
     }
 
     public function create(Request $request)
@@ -456,7 +468,7 @@ class GradeSubmissionController extends Controller
     public function updateProofStatus(Request $request, GradeSubmission $gradeSubmission, $studentId)
     {
         $request->validate([
-            'status' => 'required|in:approved,rejected'
+            'status' => 'required|in:approved,rejected,pending'
         ]);
 
         try {

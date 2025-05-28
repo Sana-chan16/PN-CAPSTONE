@@ -4,9 +4,9 @@
 <div class="page-container">
     <div class="page-header">
         <h1>Recent Grade Submissions</h1>
-        <p class="subtitle">Latest 10 grade submissions</p>
+        <!-- <p class="subtitle">Latest 10 grade submissions</p> -->
     </div>
-
+ 
     <div class="card">
         <div class="card-content">
             @if($recentSubmissions->isEmpty())

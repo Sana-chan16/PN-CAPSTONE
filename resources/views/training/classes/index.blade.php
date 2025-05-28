@@ -2,22 +2,20 @@
 
 @section('content')
 
-
-<h1 style="font-weight: 300;">Classes</h1>
-<hr>
 <div class="page-container">
-
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-error">
-            {{ session('error') }}
-        </div>
-    @endif
+<h1 class="text-4xl font-semibold text-[#2c3e50] mt-6">Classes</h1>
+<hr>
+    <!-- <div class="header-section">
+        <select id="schoolSelect" class="select-school" onchange="updateCreateButton(this.value)">
+            <option value="">Select School</option>
+            @foreach($classes->pluck('school')->unique() as $school)
+                <option value="{{ $school->school_id }}">{{ $school->name }}</option>
+            @endforeach
+        </select>
+        <a href="#" id="createClassBtn" class="btn btn-primary disabled">
+            Add New Class
+        </a> 
+    </div> -->
 
     <div class="table-wrapper">
         <div class="table-header">
@@ -34,11 +32,11 @@
                 <div class="cell">{{ $class->class_name }}</div>
                 <div class="cell">
                     @if($class->school)
-                    <a href="{{ url('/training/schools/' . $class->school->school_id) }}" class="school-link">
-                        {{ $class->school->name }}
-                    </a>
+                        <a href="{{ url('/training/schools/' . $class->school->school_id) }}" class="school-link">
+                            {{ $class->school->name }}
+                        </a>
                     @else
-                    No School Assigned
+                        No School Assigned
                     @endif
                 </div>
                 <div class="cell nos">{{ $class->students->count() }} student(s)</div>
@@ -56,6 +54,19 @@
         @endforelse
     </div>
 </div>
+
+<script>
+function updateCreateButton(schoolId) {
+    const createBtn = document.getElementById('createClassBtn');
+    if (schoolId) {
+        createBtn.href = `/training/schools/${schoolId}/classes/create`;
+        createBtn.classList.remove('disabled');
+    } else {
+        createBtn.href = '#';
+        createBtn.classList.add('disabled');
+    }
+}
+</script>
 
 <style>
 .table-wrapper {
@@ -143,7 +154,7 @@
     color: white;
 }
 
-.actions{
+.actions {
     margin-left: 15px;
     display: flex;
     gap: 10px;
@@ -170,5 +181,33 @@
         grid-template-columns: 100px 150px 400px 120px 180px;
     }
 }
+
+.header-section {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.select-school {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    min-width: 200px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.select-school:focus {
+    outline: none;
+    border-color: #22bbea;
+}
+
+.btn.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
 </style>
+
 @endsection

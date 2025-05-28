@@ -3,8 +3,8 @@
 @section('content')
 <div class="create-submission-container">
     <div class="page-header">
-        <h1>Add Intern Grade</h1>
-        <p class="subtitle">Enter the intern's evaluation grades</p>
+        <h1>Edit Intern Grade</h1>
+        <p class="subtitle">Update the intern's evaluation grades</p>
     </div>
     
     @if (session('error'))
@@ -13,59 +13,36 @@
         </div>
     @endif
 
-    <form action="{{ route('training.intern-grades.store') }}" method="POST" class="submission-form">
+    <form action="{{ route('training.intern-grades.update', $internGrade->id) }}" method="POST" class="submission-form">
         @csrf
+        @method('PUT')
 
         <div class="form-section">
             <h3>Intern Information</h3>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="school_id">School:</label>
-                    <select name="school_id" id="school_id" required>
-                        <option value="">-- Select School --</option>
-                        @foreach ($schools as $school)
-                            <option value="{{ $school->school_id }}" 
-                                {{ old('school_id') == $school->school_id ? 'selected' : '' }}>
-                                {{ $school->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('school_id')
-                        <span class="error-message">{{ $message }}</span>
-                    @enderror
+                    <label>Student ID:</label>
+                    <input type="text" value="{{ $internGrade->intern_id }}" disabled>
                 </div>
 
                 <div class="form-group">
-                    <label for="company_name">Company Name:</label>
-                    <input type="text" 
-                           name="company_name" 
-                           id="company_name" 
-                           value="{{ old('company_name') }}"
-                           required
-                           placeholder="Enter company name">
-                    @error('company_name')
-                        <span class="error-message">{{ $message }}</span>
-                    @enderror
+                    <label>Student Name:</label>
+                    <input type="text" value="{{ $internGrade->intern->user_fname }} {{ $internGrade->intern->user_lname }}" disabled>
                 </div>
 
                 <div class="form-group">
-                    <label for="class_id">Class:</label>
-                    <select name="class_id" id="class_id" required disabled>
-                        <option value="">-- Select Class --</option>
-                    </select>
-                    @error('class_id')
-                        <span class="error-message">{{ $message }}</span>
-                    @enderror
+                    <label>Company:</label>
+                    <input type="text" value="{{ $internGrade->company_name }}" disabled>
                 </div>
 
                 <div class="form-group">
-                    <label for="intern_id">Intern:</label>
-                    <select name="intern_id" id="intern_id" required disabled>
-                        <option value="">-- Select Intern --</option>
-                    </select>
-                    @error('intern_id')
-                        <span class="error-message">{{ $message }}</span>
-                    @enderror
+                    <label>School:</label>
+                    <input type="text" value="{{ $internGrade->school->name }}" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label>Class:</label>
+                    <input type="text" value="{{ $internGrade->class->class_name }}" disabled>
                 </div>
             </div>
         </div>
@@ -79,15 +56,18 @@
                         <input type="number" 
                                name="grades[ict_learning_competency]" 
                                id="ict_learning"
+                               value="{{ old('grades.ict_learning_competency', $internGrade->ict_learning_competency) }}"
                                min="1"
                                max="4"
                                step="1"
                                required
-                               value="{{ old('grades.ict_learning_competency') }}"
                                onchange="calculateFinalGrade()"
                                onkeypress="return event.charCode >= 49 && event.charCode <= 52">
                         <span class="grade-weight">(40%)</span>
                     </div>
+                    @error('grades.ict_learning_competency')
+                        <span class="error-message">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="grade-item">
@@ -96,15 +76,18 @@
                         <input type="number" 
                                name="grades[twenty_first_century_skills]" 
                                id="century_skills"
+                               value="{{ old('grades.twenty_first_century_skills', $internGrade->twenty_first_century_skills) }}"
                                min="1"
                                max="4"
                                step="1"
                                required
-                               value="{{ old('grades.twenty_first_century_skills') }}"
                                onchange="calculateFinalGrade()"
                                onkeypress="return event.charCode >= 49 && event.charCode <= 52">
                         <span class="grade-weight">(30%)</span>
                     </div>
+                    @error('grades.twenty_first_century_skills')
+                        <span class="error-message">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="grade-item">
@@ -113,15 +96,18 @@
                         <input type="number" 
                                name="grades[expected_outputs_deliverables]" 
                                id="outputs"
+                               value="{{ old('grades.expected_outputs_deliverables', $internGrade->expected_outputs_deliverables) }}"
                                min="1"
                                max="4"
                                step="1"
                                required
-                               value="{{ old('grades.expected_outputs_deliverables') }}"
                                onchange="calculateFinalGrade()"
                                onkeypress="return event.charCode >= 49 && event.charCode <= 52">
                         <span class="grade-weight">(30%)</span>
                     </div>
+                    @error('grades.expected_outputs_deliverables')
+                        <span class="error-message">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
@@ -129,10 +115,21 @@
                 <div class="final-grade-box">
                     <label>Final Grade:</label>
                     <input type="text" 
-                           name="final_grade" 
                            id="final_grade" 
-                           readonly 
-                           value="{{ old('final_grade') }}">
+                           value="{{ $internGrade->final_grade }}" 
+                           readonly>
+                </div>
+                <div class="status-display mt-4">
+                    <label>Status:</label>
+                    <span class="status-badge 
+                        @if($internGrade->status === 'Fully Achieved') status-fully-achieved
+                        @elseif($internGrade->status === 'Partially Achieved') status-partially-achieved
+                        @elseif($internGrade->status === 'Barely Achieved') status-barely-achieved
+                        @elseif($internGrade->status === 'No Achievement') status-no-achievement
+                        @else status-unknown
+                        @endif">
+                        {{ $internGrade->status }}
+                    </span>
                 </div>
             </div>
         </div>
@@ -144,7 +141,7 @@
                 <textarea name="remarks" 
                           id="remarks" 
                           rows="3" 
-                          placeholder="Enter any additional remarks about the evaluation">{{ old('remarks') }}</textarea>
+                          placeholder="Enter any additional remarks about the evaluation">{{ old('remarks', $internGrade->remarks) }}</textarea>
                 @error('remarks')
                     <span class="error-message">{{ $message }}</span>
                 @enderror
@@ -153,7 +150,7 @@
 
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Save Grade
+                <i class="fas fa-save"></i> Update Grade
             </button>
             <a href="{{ route('training.intern-grades.index') }}" class="btn btn-secondary">
                 <i class="fas fa-times"></i> Cancel
@@ -164,150 +161,41 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    const schoolSelect = $('#school_id');
-    const classSelect = $('#class_id');
-    const internSelect = $('#intern_id');
-
-    // Function to populate classes dropdown
-    function populateClasses(classes) {
-        classSelect.html('<option value="">-- Select Class --</option>');
-        if (classes && classes.length > 0) {
-            classes.forEach(function(class_) {
-                classSelect.append(
-                    $('<option></option>')
-                        .val(class_.class_id)
-                        .text(`${class_.class_name} (${class_.batch})`)
-                );
-            });
-            classSelect.prop('disabled', false);
-        } else {
-            classSelect.prop('disabled', true);
-            internSelect.prop('disabled', true);
-        }
-    }
-
-    // Function to populate students dropdown
-    function populateStudents(students) {
-        internSelect.html('<option value="">-- Select Student --</option>');
-        if (students && students.length > 0) {
-            students.forEach(function(student) {
-                internSelect.append(
-                    $('<option></option>')
-                        .val(student.user_id)
-                        .text(`${student.user_fname} ${student.user_lname}`)
-                );
-            });
-            internSelect.prop('disabled', false);
-        } else {
-            internSelect.prop('disabled', true);
-        }
-    }
-
-    // Handle school selection
-    schoolSelect.on('change', function() {
-        const schoolId = $(this).val();
-        
-        // Reset and disable dependent fields
-        classSelect.html('<option value="">-- Select Class --</option>').prop('disabled', true);
-        internSelect.html('<option value="">-- Select Student --</option>').prop('disabled', true);
-
-        if (schoolId) {
-            // Show loading state
-            classSelect.html('<option value="">Loading classes...</option>').prop('disabled', true);
-
-            // Fetch classes for selected school
-            $.ajax({
-                url: `/training/api/schools/${schoolId}/classes`,
-                method: 'GET',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(classes) {
-                    populateClasses(classes);
-                },
-                error: function(xhr) {
-                    console.error('Error fetching classes:', xhr);
-                    alert('Error loading classes. Please try again.');
-                    classSelect.html('<option value="">Error loading classes</option>');
-                }
-            });
-        }
-    });
-
-    // Handle class selection
-    classSelect.on('change', function() {
-        const classId = $(this).val();
-        const schoolId = schoolSelect.val();
-
-        // Reset intern select
-        internSelect.html('<option value="">-- Select Student --</option>').prop('disabled', true);
-
-        if (classId && schoolId) {
-            // Show loading state
-            internSelect.html('<option value="">Loading students...</option>').prop('disabled', true);
-
-            // Fetch students for selected class and school
-            $.ajax({
-                url: `/training/api/schools/${schoolId}/interns`,
-                method: 'GET',
-                data: { class_id: classId },
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(students) {
-                    populateStudents(students);
-                },
-                error: function(xhr) {
-                    console.error('Error fetching students:', xhr);
-                    alert('Error loading students. Please try again.');
-                    internSelect.html('<option value="">Error loading students</option>');
-                }
-            });
-        }
-    });
-
-    // Initialize form state if there are old values
-    if (schoolSelect.val()) {
-        schoolSelect.trigger('change');
-        if (classSelect.val()) {
-            classSelect.trigger('change');
-        }
-    }
-
-    // Add input validation for grade fields
-    $('input[type="number"]').on('input', function() {
-        let value = parseInt($(this).val());
-        if (value < 1) $(this).val(1);
-        if (value > 4) $(this).val(4);
-        calculateFinalGrade();
-    });
-});
-
-// Function to calculate final grade
 function calculateFinalGrade() {
-    const ictLearning = parseInt($('#ict_learning').val()) || 0;
-    const centurySkills = parseInt($('#century_skills').val()) || 0;
-    const outputs = parseInt($('#outputs').val()) || 0;
+    const ictLearning = parseInt(document.getElementById('ict_learning').value) || 0;
+    const centurySkills = parseInt(document.getElementById('century_skills').value) || 0;
+    const outputs = parseInt(document.getElementById('outputs').value) || 0;
 
     // Validate input ranges
     if (ictLearning < 1 || ictLearning > 4 || 
         centurySkills < 1 || centurySkills > 4 || 
         outputs < 1 || outputs > 4) {
-        $('#final_grade').val('');
+        document.getElementById('final_grade').value = '';
         return;
     }
 
-    // Calculate weighted average and round to nearest integer
+    // Calculate weighted average
     const finalGrade = Math.round(
         (ictLearning * 0.4) + 
         (centurySkills * 0.3) + 
         (outputs * 0.3)
     );
     
-    // Update final grade input
-    $('#final_grade').val(finalGrade);
+    document.getElementById('final_grade').value = finalGrade;
 }
+
+// Add input validation for grade fields
+document.querySelectorAll('input[type="number"]').forEach(input => {
+    input.addEventListener('input', function() {
+        let value = parseInt(this.value);
+        if (value < 1) this.value = 1;
+        if (value > 4) this.value = 4;
+        calculateFinalGrade();
+    });
+});
+
+// Calculate initial final grade
+calculateFinalGrade();
 </script>
 @endpush
 
@@ -390,7 +278,8 @@ function calculateFinalGrade() {
     box-shadow: 0 0 0 3px rgba(34, 187, 234, 0.1);
 }
 
-.form-group select:disabled {
+.form-group select:disabled,
+.form-group input:disabled {
     background-color: #f1f5f9;
     cursor: not-allowed;
 }
@@ -462,6 +351,51 @@ function calculateFinalGrade() {
     border: none;
     padding: 0.5rem;
     border-radius: 4px;
+}
+
+.status-display {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.status-display label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.status-fully-achieved {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-partially-achieved {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.status-barely-achieved {
+    background-color: #fef9c3;
+    color: #854d0e;
+}
+
+.status-no-achievement {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.status-unknown {
+    background-color: #f3f4f6;
+    color: #4b5563;
 }
 
 .form-actions {
