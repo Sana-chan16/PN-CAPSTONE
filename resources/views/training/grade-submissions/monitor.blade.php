@@ -129,8 +129,6 @@
                                                                     {{ number_format((float)$gradeValue, 1) }}
                                                                 @endif
                                                             </div>
-                                                        @else
-                                                            <span class="text-muted-custom small-text">Not submitted</span>
                                                         @endif
                                                     </td>
                                                 @endforeach

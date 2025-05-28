@@ -118,6 +118,9 @@ Route::middleware('auth')->group(function () {
             // Temporary route to fix subject associations for a submission
             Route::get('/grade-submissions/{gradeSubmission}/fix-subjects', 'fixSubmissionSubjects')->name('grade-submissions.fix-subjects');
         });
+
+        // Analytics route for per-subject grade analytics
+        Route::get('/analytics/subjects', [TrainingController::class, 'subjectAnalytics'])->name('analytics.subjects');
     }); // <-- ✅ properly closed here
     
     
@@ -130,7 +133,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/grade-submissions/{submissionId}', [StudentController::class, 'showSubmissionForm'])->name('submit-grades.show');
         Route::post('/grade-submissions/{submissionId}', [StudentController::class, 'submitGrades'])->name('submit-grades.store');
         Route::get('/view-submission/{submissionId}', [StudentController::class, 'viewSubmission'])->name('view-submission');
-        Route::get('/grade-submissions', [StudentController::class, 'submissionsList'])->name('student.grade-submissions');
+        Route::get('/grade-submissions', [StudentController::class, 'submissionsList'])->name('grade-submissions');
+        Route::get('/grade-status', [StudentController::class, 'gradeStatus'])->name('grade-status');
+        Route::get('/profile', [StudentController::class, 'editProfile'])->name('profile.edit');
+        Route::post('/profile', [StudentController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/subjects/passed', [StudentController::class, 'passedSubjects'])->name('student.subjects.passed');
+        Route::get('/subjects/failed', [StudentController::class, 'failedSubjects'])->name('student.subjects.failed');
+        Route::get('/subjects/inc', [StudentController::class, 'incSubjects'])->name('student.subjects.inc');
+        Route::get('/subjects/nc', [StudentController::class, 'ncSubjects'])->name('student.subjects.nc');
+        Route::get('/subjects/dr', [StudentController::class, 'drSubjects'])->name('student.subjects.dr');
     });
 
 

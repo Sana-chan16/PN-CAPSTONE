@@ -21,6 +21,17 @@
         </div>
     @endif
 
+    @if (
+        $errors->any())
+        <div class="alert alert-danger">
+            <ul style="margin-bottom: 0;">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('training.schools.store') }}" method="POST" class="form-container" id="createSchoolForm">
         @csrf
         
@@ -187,52 +198,11 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('createSchoolForm');
-    
-    form.addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent default submission
-        
-        // Create FormData object
-        const formData = new FormData(form);
-        
-        // Send the form data using fetch
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else {
-                return response.json();
-            }
-        })
-        .then(data => {
-            if (data) {
-                if (data.success) {
-                    window.location.href = '{{ route("training.manage-students") }}';
-                } else {
-                    alert(data.message || 'An error occurred');
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while creating the school');
-        });
-    });
-
-    let subjectCount = {{ count(old('subjects', [])) }};
-    let classCount = {{ count(old('classes', [])) }};
-    let currentClassIndex = null;
-    const modal = document.getElementById('studentModal');
-    const closeButtons = document.querySelectorAll('.close-modal');
-    const confirmButton = document.getElementById('confirmStudentSelection');
+    // Remove the JS submit handler to allow normal form submission
+    // (All other JS for dynamic fields and modal remains unchanged)
 
     // Add Subject Button
+    let subjectCount = document.querySelectorAll('.subject-row').length;
     document.getElementById('add-subject').addEventListener('click', function() {
         const container = document.getElementById('subjects-container');
         const row = document.createElement('div');
@@ -249,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Add Class Button
+    let classCount = document.querySelectorAll('.class-row').length;
     document.getElementById('add-class').addEventListener('click', function() {
         const container = document.getElementById('classes-container');
         const row = document.createElement('div');
@@ -268,10 +239,24 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         container.appendChild(row);
         classCount++;
-        document.activeElement.blur(); // Prevent auto-focus triggering modal
     });
 
-    // Close modal when clicking close button or outside the modal
+    // Modal logic for Select Students
+    let currentClassIndex = null;
+    const modal = document.getElementById('studentModal');
+    const closeButtons = document.querySelectorAll('.close-modal');
+    const confirmButton = document.getElementById('confirmStudentSelection');
+
+    // Event delegation for dynamically added .btn-select-students
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-select-students')) {
+            currentClassIndex = e.target.getAttribute('data-class-index');
+            modal.style.display = 'flex';
+            loadStudents();
+        }
+    });
+
+    // Close modal logic
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
             modal.style.display = 'none';
@@ -284,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Handle confirm button click
+    // Confirm student selection
     confirmButton.addEventListener('click', function() {
         const selectedStudents = Array.from(document.querySelectorAll('#modalStudentsContainer input[type="checkbox"]:checked'))
             .map(checkbox => ({
@@ -295,15 +280,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         updateSelectedStudentsList(currentClassIndex, selectedStudents);
         modal.style.display = 'none';
-    });
-
-    // Handle select students button click
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('btn-select-students')) {
-            currentClassIndex = e.target.getAttribute('data-class-index');
-            modal.style.display = 'flex';
-            loadStudents();
-        }
     });
 });
 

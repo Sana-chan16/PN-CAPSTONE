@@ -8,6 +8,7 @@ use App\Models\ClassModel;
 use App\Models\StudentDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TrainingController extends Controller
 {
@@ -228,6 +229,36 @@ class TrainingController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function subjectAnalytics()
+    {
+        $subjects = DB::table('subjects')->get();
+        $analytics = [];
+
+        foreach ($subjects as $subject) {
+            $counts = DB::table('grade_submission_subject')
+                ->where('subject_id', $subject->id)
+                ->selectRaw('
+                    SUM(CASE WHEN grade >= 1.0 AND grade <= 3.0 THEN 1 ELSE 0 END) as passed,
+                    SUM(CASE WHEN grade > 3.0 AND grade <= 5.0 THEN 1 ELSE 0 END) as failed,
+                    SUM(CASE WHEN UPPER(grade) = "INC" THEN 1 ELSE 0 END) as inc,
+                    SUM(CASE WHEN UPPER(grade) = "NC" THEN 1 ELSE 0 END) as nc,
+                    SUM(CASE WHEN UPPER(grade) IN ("DR", "DROPOUT", "DROP OUT") THEN 1 ELSE 0 END) as dr
+                ')
+                ->first();
+
+            $analytics[] = [
+                'subject_name' => $subject->name,
+                'passed' => $counts->passed,
+                'failed' => $counts->failed,
+                'inc' => $counts->inc,
+                'nc' => $counts->nc,
+                'dr' => $counts->dr,
+            ];
+        }
+
+        return view('training.analytics.subjects', compact('analytics'));
     }
 
 }

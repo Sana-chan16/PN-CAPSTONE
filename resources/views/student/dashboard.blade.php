@@ -2,7 +2,59 @@
 
 @section('content')
 <div class="dashboard-container">
-    <h1>My Grade Submissions</h1>
+    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 18px;">
+        <h1 style="margin-bottom: 0;">Grade Submissions</h1>
+        <form method="GET" action="" style="min-width: 220px; margin-top: 8px;">
+            <select name="filter_key" class="form-select" style="width: 100%;" onchange="this.form.submit()">
+                <option value="" disabled @if(empty($filterKey)) selected @endif>Select Semester & Year</option>
+                @foreach($filterOptions as $option)
+                    <option value="{{ $option }}" @if(isset($filterKey) && $filterKey == $option) selected @endif>{{ $option }}</option>
+                @endforeach
+            </select>
+        </form>
+    </div>
+    <div class="row mb-4" style="display: flex; flex-wrap: nowrap; justify-content: center; gap: 20px; margin-bottom: 48px; overflow-x: auto;">
+        <a href="{{ route('student.student.subjects.passed') }}" style="text-decoration: none;">
+        <div class="card mb-3" style="width: 100%; min-width: 0; max-width: 120px; background: #F6DFB6; color: #222; border: none; border-radius: 5%; box-shadow: 0 4px 12px rgba(0,0,0,0.10); margin-bottom: 12px;">
+            <div class="card-body text-center">
+                <h3 class="card-title">Passed</h3>
+                <p class="card-text" style="font-size: 1.5em !important; font-weight: bold;">{{ $passed }}</p>
+            </div>
+        </div>
+        </a>
+        <a href="{{ route('student.student.subjects.failed') }}" style="text-decoration: none;">
+        <div class="card mb-3" style="width: 100%; min-width: 0; max-width: 120px; background: #F6DFB6; color: #222; border: none; border-radius: 5%; box-shadow: 0 4px 12px rgba(0,0,0,0.10); margin-bottom: 12px;">
+            <div class="card-body text-center">
+                <h3 class="card-title">Failed</h3>
+                <p class="card-text" style="font-size: 1.5em !important; font-weight: bold;">{{ $failed }}</p>
+            </div>
+        </div>
+        </a>
+        <a href="{{ route('student.student.subjects.inc') }}" style="text-decoration: none;">
+        <div class="card mb-3" style="width: 100%; min-width: 0; max-width: 120px; background: #F6DFB6; color: #222; border: none; border-radius: 5%; box-shadow: 0 4px 12px rgba(0,0,0,0.10); margin-bottom: 12px;">
+            <div class="card-body text-center">
+                <h3 class="card-title">INC</h3>
+                <p class="card-text" style="font-size: 1.5em !important; font-weight: bold;">{{ $inc }}</p>
+            </div>
+        </div>
+        </a>
+        <a href="{{ route('student.student.subjects.nc') }}" style="text-decoration: none;">
+        <div class="card mb-3" style="width: 100%; min-width: 0; max-width: 120px; background: #F6DFB6; color: #222; border: none; border-radius: 5%; box-shadow: 0 4px 12px rgba(0,0,0,0.10); margin-bottom: 12px;">
+            <div class="card-body text-center">
+                <h3 class="card-title">NC</h3>
+                <p class="card-text" style="font-size: 1.5em !important; font-weight: bold;">{{ $nc }}</p>
+            </div>
+        </div>
+        </a>
+        <a href="{{ route('student.student.subjects.dr') }}" style="text-decoration: none;">
+        <div class="card mb-3" style="width: 100%; min-width: 0; max-width: 120px; background: #F6DFB6; color: #222; border: none; border-radius: 5%; box-shadow: 0 4px 12px rgba(0,0,0,0.10); margin-bottom: 12px;">
+            <div class="card-body text-center">
+                <h3 class="card-title">DR</h3>
+                <p class="card-text" style="font-size: 1.5em !important; font-weight: bold;">{{ $dropout }}</p>
+            </div>
+        </div>
+        </a>
+    </div>
     
     @if(session('error'))
         <div class="alert alert-danger">
@@ -17,7 +69,18 @@
     @endif
 
     @if($gradeSubmissions->isEmpty())
-        <div class="no-submissions">
+        <div class="no-submissions" style="margin-top: 40px; text-align: center;">
+            <div style="margin-bottom: 18px;">
+                <!-- Colorful SVG illustration for empty state -->
+                <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="15" y="30" width="70" height="40" rx="10" fill="#e0f2fe"/>
+                  <rect x="28" y="43" width="44" height="8" rx="2" fill="#38bdf8"/>
+                  <rect x="28" y="57" width="28" height="6" rx="2" fill="#facc15"/>
+                  <circle cx="70" cy="60" r="6" fill="#fbbf24"/>
+                  <ellipse cx="50" cy="80" rx="22" ry="6" fill="#bae6fd"/>
+                  <rect x="40" y="36" width="20" height="4" rx="2" fill="#0ea5e9"/>
+                </svg>
+            </div>
             <p>No grade submissions found.</p>
         </div>
     @else
@@ -73,12 +136,100 @@
     padding: 20px;
     max-width: 1200px;
     margin: 0 auto;
+    overflow-y: auto;
+    max-height: 90vh;
 }
 
 h1 {
     color: #333;
     margin-bottom: 20px;
     font-size: 24px;
+}
+
+.row.mb-4 {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 48px;
+    overflow-x: auto;
+}
+
+.row.mb-4 a {
+    flex: 0 0 120px;
+    min-width: 100px;
+    max-width: 140px;
+    display: flex;
+    justify-content: center;
+    text-decoration: none;
+    margin: 0 6px;
+}
+
+.card.mb-3 {
+    width: 100%;
+    min-width: 0;
+    max-width: 120px;
+    background: #F6DFB6;
+    color: #222;
+    border: none;
+    border-radius: 5%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    margin-bottom: 12px;
+}
+
+.card-title {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+.card-text {
+    font-size: 1.5em !important;
+    font-weight: bold;
+}
+
+@media (max-width: 900px) {
+    .row.mb-4 {
+        gap: 10px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .row.mb-4 {
+        flex-direction: column;
+        gap: 10px !important;
+        align-items: center;
+        overflow-x: visible;
+    }
+    .row.mb-4 a {
+        width: 100%;
+        min-width: 0;
+        max-width: 350px;
+        padding: 0;
+    }
+    .card.mb-3 {
+        width: 100%;
+        min-width: 0;
+        max-width: 350px;
+    }
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .dashboard-header h1 {
+        font-size: 1.3em;
+    }
+    .dashboard-header form {
+        width: 100%;
+    }
+    .dashboard-container {
+        max-width: 100vw !important;
+        width: 100vw !important;
+        padding: 0 8px;
+        margin-top: 10px !important;
+        overflow-y: auto;
+        max-height: 100dvh;
+    }
 }
 
 .alert {
@@ -180,7 +331,7 @@ h1 {
 
 .status.submitted {
      background-color: #cce5ff;
-     color: #004085;
+     color: #000;
 }
 
 .no-submissions {
@@ -195,12 +346,6 @@ h1 {
     color: #6c757d;
     font-size: 1.1em;
     margin: 0;
-}
-
-@media (max-width: 768px) {
-    .submissions-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* Styles for the subjects list (removed as subjects are not listed directly on the card anymore) */

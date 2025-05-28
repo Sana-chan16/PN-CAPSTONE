@@ -229,8 +229,8 @@
                         </a>
                     </div>
                 </li>
-                <li>
-                    <a href="#">
+                <li class="{{ request()->routeIs('training.analytics.subjects') ? 'active' : '' }}">
+                    <a href="{{ route('training.analytics.subjects') }}" style="cursor:pointer;">
                         <img src="{{ asset('images/analytics.png') }}" alt="Analytics"> Analytics
                     </a>
                 </li>
