@@ -54,6 +54,41 @@ class GradeSubmissionController extends Controller
         
         // Group submissions by school
         $submissionsBySchool = $submissions->groupBy('school_id');
+        
+        // Get classes for each school
+        $classesBySchool = collect();
+        foreach($schools as $school) {
+            $classesBySchool[$school->school_id] = ClassModel::where('school_id', $school->school_id)->get();
+        }
+        
+        // Get submissions based on filters
+        $query = GradeSubmission::query();
+        
+        // Apply school filter if selected
+        if ($request->has('school_id') && $request->school_id) {
+            $query->where('school_id', $request->school_id);
+        }
+        
+        // Apply class filter if selected
+        if ($request->has('class_id') && $request->class_id) {
+            $query->where('class_id', $request->class_id);
+        }
+        
+        // Apply semester/term/year filter if selected
+        if ($request->has('filter_key') && $request->filter_key) {
+            $filter = explode(',', $request->filter_key);
+            if (count($filter) === 3) {
+                $query->where('semester', $filter[0])
+                    ->where('term', $filter[1])
+                    ->where('academic_year', $filter[2]);
+            }
+        }
+        
+        // Get submissions with related data
+        $submissions = $query->with(['students', 'proofs', 'subjects'])->get();
+        
+        // Group submissions by school
+        $submissionsBySchool = $submissions->groupBy('school_id');
 
         // Get unique filter options from submissions
         $filterOptions = $submissions->map(function($submission) {
@@ -468,6 +503,7 @@ class GradeSubmissionController extends Controller
     public function updateProofStatus(Request $request, GradeSubmission $gradeSubmission, $studentId)
     {
         $request->validate([
+            'status' => 'required|in:approved,rejected,pending'
             'status' => 'required|in:approved,rejected,pending'
         ]);
 

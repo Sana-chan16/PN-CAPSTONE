@@ -44,6 +44,11 @@
                     <div class="action-buttons">
                         <a href="{{ route('training.classes.show', $class) }}" class="action-btn view">view</a>
                         <a href="{{ route('training.classes.edit', $class) }}" class="action-btn edit">edit</a>
+                        <form action="{{ route('training.classes.destroy', $class) }}" method="POST" class="d-inline" id="delete-form-{{ $class->id }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" style="background-color: #dc3545; padding-left: 15px;cursor: pointer;" class="action-btn delete" onclick="confirmDelete({{ $class->id }})">delete</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -121,6 +126,7 @@ function updateCreateButton(schoolId) {
     gap: 10px;
     justify-content: center;
     padding-left: 15px;
+    cursor: pointer;
 }
 
 .action-btn {

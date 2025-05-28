@@ -66,6 +66,14 @@
                              <i class="fas fa-undo"></i> Reset
                          </button>
                      </div>
+                     <div class="filter-buttons">
+                         <button type="submit" class="btn-custom btn-primary-custom">
+                             <i class="fas fa-filter"></i> Filter
+                         </button>
+                         <button type="button" onclick="location.href='{{ route('training.grade-submissions.index') }}'" class="btn-custom btn-secondary-custom">
+                             <i class="fas fa-undo"></i> Reset
+                         </button>
+                     </div>
                  </form>
             </div>
 
@@ -122,13 +130,15 @@
                             // Fetch students for this submission
                             $students = \DB::table('grade_submission_subject')
                                 ->join('pnph_users', 'grade_submission_subject.user_id', '=', 'pnph_users.user_id')
+                                ->join('student_details', 'pnph_users.user_id', '=', 'student_details.user_id')
                                 ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
                                 ->where('pnph_users.user_role', 'student')
-                                ->select('pnph_users.user_id', 'pnph_users.user_fname', 'pnph_users.user_lname')
+                                ->select('pnph_users.user_id', 'pnph_users.user_fname', 'pnph_users.user_lname', 'student_details.student_id')
                                 ->distinct()
                                 ->get()
                                 ->map(function ($student) {
                                     return (object)[
+                                        'student_id' => $student->student_id,
                                         'user_id' => $student->user_id,
                                         'name' => $student->user_fname . ' ' . $student->user_lname
                                     ];
@@ -179,6 +189,8 @@
                                             @endforeach
                                             <th class="text-center-custom" style="width: 120px">Proof</th>
                                             <th class="text-center-custom" style="width: 120px">Status</th>
+                                            <th class="text-center-custom" style="width: 120px">Proof</th>
+                                            <th class="text-center-custom" style="width: 120px">Status</th>
                                             <th class="text-center-custom" style="width: 120px">Action</th>
                                         </tr>
                                     </thead>
@@ -193,6 +205,7 @@
                                                             $grade = $grades[$student->user_id][$subject->id] ?? null;
                                                             $gradeValue = $grade ? $grade->grade : null;
                                                         @endphp
+                                                        
                                                         
                                                         @if($gradeValue !== null)
                                                             <div class="grade-value small-text">
@@ -215,6 +228,8 @@
                                                     @endphp
                                                     @if($proof)
                                                         <a href="{{ route('training.grade-submissions.view-proof', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}"
+                                                           class="btn-custom btn-primary-custom">
+                                                            <i class="fas fa-eye"></i> View Proof
                                                            class="btn-custom btn-primary-custom">
                                                             <i class="fas fa-eye"></i> View Proof
                                                         </a>
@@ -298,6 +313,7 @@
             </div>
         @endif
     @endforeach
+     </div>
      </div>
 
 <style>
@@ -449,6 +465,17 @@
         border-radius: 8px;
     }
 
+    .action-buttons-container {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+
     .btn-custom {
         font-family: 'Poppins', sans-serif;
         padding: 5px 12px;
@@ -475,10 +502,27 @@
     .btn-primary-custom {
         background-color: var(--primary-color);
         color: white;
+        color: white;
     }
 
     .btn-secondary-custom {
         background-color: var(--secondary-color);
+        color: white;
+    }
+
+    .btn-success-custom {
+        background-color: var(--success-color);
+        color: white;
+    }
+
+    .btn-danger-custom {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-warning-custom {
+        background-color: #ffc107;
+        color: #000;
         color: white;
     }
 
