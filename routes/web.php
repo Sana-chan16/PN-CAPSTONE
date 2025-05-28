@@ -12,7 +12,6 @@ use App\Http\Controllers\EducatorController;
 use App\Http\Controllers\Training\GradeSubmissionController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\ClassGradeController;
-use App\Http\Controllers\AnalyticsController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -68,18 +67,16 @@ Route::middleware('auth')->group(function () {
 
     
     
+    // Class Grades Routes
+    Route::get('/class-grades', [ClassGradeController::class, 'index'])->name('class-grades.index');
+    Route::get('/api/classes/{schoolId}', [ClassGradeController::class, 'getClasses']);
+    Route::get('/api/class-grades', [ClassGradeController::class, 'getClassGrades']);
+
     // Training routes
 
     Route::prefix('training')->name('training.')->middleware(['auth', 'can:training-access'])->group(function () {
         // Analytics routes
-        Route::prefix('analytics')->name('analytics.')->group(function() {
-            Route::get('/class-grades', [AnalyticsController::class, 'showClassGrades'])->name('class-grades');
-            Route::get('/schools', [AnalyticsController::class, 'getSchools'])->name('schools');
-            Route::get('/classes/{school}', [AnalyticsController::class, 'getClassesBySchool'])->name('classes');
-            Route::get('/terms/{school}', [AnalyticsController::class, 'getTermsBySchool'])->name('terms');
-            Route::get('/class-submissions/{school}/{class}', [AnalyticsController::class, 'getClassSubmissions'])->name('class-submissions');
-            Route::get('/class-grades-data', [AnalyticsController::class, 'fetchClassGrades'])->name('class-grades-data');
-        });
+     
 
 
         
@@ -133,10 +130,6 @@ Route::middleware('auth')->group(function () {
             // Temporary route to fix subject associations for a submission
             Route::get('/grade-submissions/{gradeSubmission}/fix-subjects', 'fixSubmissionSubjects')->name('grade-submissions.fix-subjects');
         });
-
-
-
-
     }); // <-- ✅ properly closed here
     
     
@@ -152,7 +145,5 @@ Route::middleware('auth')->group(function () {
         Route::get('/grade-submissions', [StudentController::class, 'submissionsList'])->name('student.grade-submissions');
     });
 
-  
-    
 
 });

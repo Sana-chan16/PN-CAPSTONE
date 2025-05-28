@@ -4,6 +4,12 @@
 
 
 <link rel="stylesheet" href="{{ asset('css/training/school/create.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+    body {
+        font-family: Poppins;
+    }
+</style>
 <div class="page-container">
     <div class="header-section">
         <h2>Create New School</h2>
@@ -15,16 +21,30 @@
         </div>
     @endif
 
-    @if(session('error'))
-        <div class="alert alert-error">
-            {{ session('error') }}
+    @if(session('error') || $errors->any())
+        <div class="alert alert-danger" style="color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+            <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 16px; font-weight: 600;">Creation unsuccessful</h4>
+            <div style="margin: 0; padding: 0;">
+                @if(session('error'))
+                    <div style="padding: 5px 0; border-bottom: 1px solid #f5c6cb; margin-bottom: 5px;">
+                        {{ session('error') }}
+                    </div>
+                @endif
+                @foreach($errors->all() as $error)
+                    <div style="padding: 5px 0; border-bottom: 1px solid #f5c6cb; margin-bottom: 5px;">
+                        {{ $error }}
+                    </div>
+                @endforeach
+            </div>
         </div>
     @endif
 
-    <div id="formErrors" class="alert alert-error" style="display:none"></div>
-
     <form action="{{ route('training.schools.store') }}" method="POST" class="form-container" id="createSchoolForm">
         @csrf
+        <div id="form-errors" class="alert alert-danger" style="display: none; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+            <h4 style="margin-top: 0; margin-bottom: 10px; font-size: 16px; font-weight: 600;">Creation unsuccessful</h4>
+            <div id="error-list" style="margin: 0; padding: 0;"></div>
+        </div>
         
         <div class="form-group">
             <label for="school_id">School ID</label>
@@ -188,48 +208,261 @@
 </div>
 
 <script>
+function showError(field, message) {
+    // Remove any existing error for this field
+    const existingError = document.getElementById(`${field}-error`);
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    if (message) {
+        const input = document.querySelector(`[name="${field}"]`) || document.getElementById(field);
+        if (input) {
+            input.style.borderColor = '#dc3545';
+            const errorDiv = document.createElement('div');
+            errorDiv.id = `${field}-error`;
+            errorDiv.className = 'error-message';
+            errorDiv.style.color = '#dc3545';
+            errorDiv.style.fontSize = '0.875rem';
+            errorDiv.style.marginTop = '0.25rem';
+            errorDiv.textContent = message;
+            
+            // Insert after the input
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
+    }
+}
+
+// Handle form submission
+// Global variables
+let subjectCount = {{ count(old('subjects', [])) }};
+let classCount = {{ count(old('classes', [])) }};
+let currentClassIndex = null;
+const modal = document.getElementById('studentModal');
+
+// Helper function to show error messages
+function showError(field, message) {
+    // Remove any existing error for this field
+    const existingError = document.getElementById(`${field}-error`);
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    if (message) {
+        const input = document.querySelector(`[name="${field}"]`) || document.getElementById(field);
+        if (input) {
+            input.style.borderColor = '#dc3545';
+            const errorDiv = document.createElement('div');
+            errorDiv.id = `${field}-error`;
+            errorDiv.className = 'error-message';
+            errorDiv.style.color = '#dc3545';
+            errorDiv.style.fontSize = '0.875rem';
+            errorDiv.style.marginTop = '0.25rem';
+            errorDiv.textContent = message;
+            
+            // Insert after the input
+            input.parentNode.insertBefore(errorDiv, input.nextSibling);
+        }
+    }
+}
+
+// Initialize the application when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('createSchoolForm');
+    const closeButtons = document.querySelectorAll('.close-modal');
+    const confirmButton = document.getElementById('confirmStudentSelection');
     
+    // Form submission handler
     form.addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent default submission
+        e.preventDefault();
         
-        const errorBox = document.getElementById('formErrors');
-        if (errorBox) errorBox.style.display = 'none';
+        // Clear previous error messages
+        document.querySelectorAll('.error-message').forEach(el => el.remove());
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.style.borderColor = '';
+        });
         
-        // Create FormData object
-        const formData = new FormData(form);
+        const errorList = document.getElementById('error-list');
+        const formErrors = document.getElementById('form-errors');
+        errorList.innerHTML = '';
+        formErrors.style.display = 'none';
         
-        // Send the form data using fetch
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+        let isValid = true;
+        const errors = [];
+        
+        // Check required fields
+        const requiredInputs = document.querySelectorAll('[required]');
+        requiredInputs.forEach(input => {
+            const name = input.name || input.id;
+            if (!input.value.trim()) {
+                const label = document.querySelector(`label[for="${name}"]`);
+                const fieldName = label ? label.textContent.trim().replace('*', '') : 'This field';
+                showError(name, `${fieldName} is required`);
+                errors.push(`${fieldName} is required`);
+                isValid = false;
             }
-        })
-        .then(response => {
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else if (response.status === 422) {
-                // Validation error
-                return response.json().then(data => {
-                    displayValidationErrors(data.errors);
+        });
+        
+        // Check if at least one term is selected
+        const terms = document.querySelectorAll('input[name="terms[]"]:checked');
+        if (terms.length === 0) {
+            showError('terms', 'Please select at least one term');
+            errors.push('Please select at least one term');
+            isValid = false;
+        }
+        
+        // Check if at least one subject is added
+        const subjectRows = document.querySelectorAll('.subject-row');
+        if (subjectRows.length === 0) {
+            showError('subjects', 'Please add at least one subject');
+            errors.push('Please add at least one subject');
+            isValid = false;
+        } else {
+            // Validate each subject row
+            subjectRows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input[required]');
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        const name = input.name || input.id;
+                        showError(name, 'This field is required');
+                        errors.push(`Subject ${index + 1} is missing required information`);
+                        isValid = false;
+                    }
                 });
-            } else {
-                return response.json();
+            });
+        }
+        
+        // Check if at least one class is added
+        const classRows = document.querySelectorAll('.class-row');
+        if (classRows.length === 0) {
+            showError('classes', 'Please add at least one class');
+            errors.push('Please add at least one class');
+            isValid = false;
+        } else {
+            // Validate each class row
+            classRows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input[required]');
+                let classValid = true;
+                
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        const name = input.name || input.id;
+                        showError(name, 'This field is required');
+                        errors.push(`Class ${index + 1} is missing required information`);
+                        isValid = false;
+                        classValid = false;
+                    }
+                });
+                
+                // Check if class has students
+                if (classValid) {
+                    const studentCount = row.querySelectorAll('.student-tag').length;
+                    if (studentCount === 0) {
+                        errors.push(`Class ${index + 1} must have at least one student`);
+                        isValid = false;
+                    }
+                }
+            });
+        }
+        
+        if (!isValid) {
+            // Show errors at the top of the form
+            errors.forEach(error => {
+                const errorDiv = document.createElement('div');
+                errorDiv.textContent = error;
+                errorDiv.style.padding = '5px 0';
+                errorDiv.style.borderBottom = '1px solid #f5c6cb';
+                errorDiv.style.marginBottom = '5px';
+                errorList.appendChild(errorDiv);
+            });
+            formErrors.style.display = 'block';
+            
+            // Scroll to the first error
+            const firstError = document.querySelector('.error-message');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-        })
-        .then(data => {
-            if (data && data.success) {
-                window.location.href = '{{ route("training.manage-students") }}';
-            } else if (data && data.message) {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while creating the school');
+            
+            return false;
+        }
+        
+        // If all validations pass, submit the form
+        this.submit();
+    });
+
+    // Add Subject Button
+    document.getElementById('add-subject').addEventListener('click', function() {
+        const container = document.getElementById('subjects-container');
+        const row = document.createElement('div');
+        row.className = 'subject-row';
+        row.innerHTML = `
+            <input type="text" name="subjects[${subjectCount}][offer_code]" placeholder="Offer Code" required>
+            <input type="text" name="subjects[${subjectCount}][name]" placeholder="Subject Name" required>
+            <input type="text" name="subjects[${subjectCount}][instructor]" placeholder="Instructor" required>
+            <input type="text" name="subjects[${subjectCount}][schedule]" placeholder="Schedule" required>
+            <button type="button" class="btn-remove" onclick="removeSubject(this)">×</button>
+        `;
+        container.appendChild(row);
+        subjectCount++;
+    });
+
+    // Add Class Button
+    document.getElementById('add-class').addEventListener('click', function() {
+        const container = document.getElementById('classes-container');
+        const row = document.createElement('div');
+        row.className = 'class-row';
+        row.innerHTML = `
+            <div class="class-header">
+                <div class="class-display">
+                    <strong>ID:</strong>
+                    <input type="text" name="classes[${classCount}][class_id]" placeholder="Class ID" required>
+                    <strong>Name:</strong>
+                    <input type="text" name="classes[${classCount}][name]" placeholder="Class Name" required>
+                </div>
+                <button type="button" class="btn-select-students" data-class-index="${classCount}">Select Students</button>
+                <button type="button" class="btn-remove" onclick="removeClass(this)">×</button>
+            </div>
+            <div id="students-container-${classCount}" class="students-container"></div>
+        `;
+        container.appendChild(row);
+        
+        // Add event listener for the new select students button
+        row.querySelector('.btn-select-students').addEventListener('click', function() {
+            currentClassIndex = this.getAttribute('data-class-index');
+            openStudentModal();
+        });
+        
+        classCount++;
+        document.activeElement.blur(); // Prevent auto-focus triggering modal
+    });
+    
+    // Initialize any existing select students buttons
+    document.querySelectorAll('.btn-select-students').forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            currentClassIndex = this.getAttribute('data-class-index');
+            openStudentModal();
+        });
+    });
+
+    // Modal event listeners
+    closeButtons.forEach(button => {
+        button.addEventListener('click', closeStudentModal);
+    });
+    
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            closeStudentModal();
+        }
+    });
+    
+    confirmButton.addEventListener('click', confirmStudentSelection);
+    
+    // Initialize any existing select students buttons
+    document.querySelectorAll('.btn-select-students').forEach(button => {
+        button.addEventListener('click', function() {
+            currentClassIndex = this.getAttribute('data-class-index');
+            openStudentModal();
         });
     });
 
@@ -304,16 +537,20 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSelectedStudentsList(currentClassIndex, selectedStudents);
         modal.style.display = 'none';
     });
-
-    // Handle select students button click
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('btn-select-students')) {
-            currentClassIndex = e.target.getAttribute('data-class-index');
-            modal.style.display = 'flex';
-            loadStudents();
-        }
-    });
 });
+
+// Make these functions globally available
+window.removeSubject = function(button) {
+    const row = button.parentElement;
+    row.remove();
+    updateSubjectIndices();
+};
+
+window.removeClass = function(button) {
+    const row = button.closest('.class-row');
+    row.remove();
+    updateClassIndices();
+};
 
 function removeSubject(button) {
     const row = button.parentElement;
@@ -460,24 +697,6 @@ function removeSelectedStudent(button, classIndex, studentId) {
     const hiddenInput = document.querySelector(`input[name="classes[${classIndex}][student_ids][]"][value="${studentId}"]`);
     if (hiddenInput) {
         hiddenInput.remove();
-    }
-}
-
-function displayValidationErrors(errors) {
-    // Collect all error messages
-    let allMessages = [];
-    for (const [field, messages] of Object.entries(errors)) {
-        allMessages = allMessages.concat(messages);
-    }
-
-    // Display all errors in the error box
-    const errorBox = document.getElementById('formErrors');
-    if (errorBox) {
-        errorBox.innerHTML = allMessages.map(msg => `<div>${msg}</div>`).join('');
-        errorBox.style.display = 'block';
-    } else {
-        // Fallback: alert all errors
-        alert(allMessages.join('\n'));
     }
 }
 </script>
