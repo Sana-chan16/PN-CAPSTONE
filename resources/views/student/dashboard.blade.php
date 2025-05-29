@@ -2,8 +2,34 @@
 
 @section('content')
 <div class="dashboard-container">
+    {{-- Student Profile Section --}}
+    {{-- Moved to profile.blade.php --}}
+
     <h1>My Grade Submissions</h1>
-    
+
+    <div class="status-cards-row">
+        <div class="status-card">
+            <h3>Passed</h3>
+            <p class="status-count">{{ $statusCounts['Passed'] ?? 0 }}</p>
+        </div>
+        <div class="status-card">
+            <h3>Failed</h3>
+            <p class="status-count">{{ $statusCounts['Failed'] ?? 0 }}</p>
+        </div>
+        <div class="status-card">
+            <h3>INC</h3>
+            <p class="status-count">{{ $statusCounts['INC'] ?? 0 }}</p>
+        </div>
+        <div class="status-card">
+            <h3>NC</h3>
+            <p class="status-count">{{ $statusCounts['NC'] ?? 0 }}</p>
+        </div>
+        <div class="status-card">
+            <h3>DR</h3>
+            <p class="status-count">{{ $statusCounts['DR'] ?? 0 }}</p>
+        </div>
+    </div>
+
     @if(session('error'))
         <div class="alert alert-danger">
             {{ session('error') }}
@@ -256,6 +282,33 @@ h1 {
 
 .btn-view-submission:hover {
     background-color: #5a6268;
+}
+
+.status-cards-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+.status-card {
+    background: #FF9933;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+}
+.status-card:hover {
+    background: #22BBEA;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    transform: translateY(-4px) scale(1.03);
+}
+.status-count {
+    font-size: 2em;
+    margin: 0;
 }
 </style>
 @endsection

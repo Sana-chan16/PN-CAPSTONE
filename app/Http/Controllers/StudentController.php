@@ -293,4 +293,23 @@ class StudentController extends Controller
 
         return view('student.grade_submissions_list', compact('gradeSubmissions', 'filterOptions', 'filterKey'));
     }
+
+    public function uploadProfileImage(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'profile_image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $image = $request->file('profile_image');
+        $imageName = 'profile_' . $user->user_id . '.' . $image->getClientOriginalExtension();
+        $image->storeAs('public/profile_images', $imageName);
+
+        // Save the path in the user's profile_image column
+        $user->profile_image = 'profile_images/' . $imageName;
+        $user->save();
+
+        return redirect()->back()->with('success', 'Profile image updated successfully!');
+    }
 } 

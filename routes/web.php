@@ -146,10 +146,12 @@ Route::middleware('auth')->group(function () {
     // Student routes
     Route::prefix('student')->name('student.')->middleware('can:student-access')->group(function () {
         Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/profile', function() { return view('student.profile'); })->name('profile');
         Route::get('/grade-submissions/{submissionId}', [StudentController::class, 'showSubmissionForm'])->name('submit-grades.show');
         Route::post('/grade-submissions/{submissionId}', [StudentController::class, 'submitGrades'])->name('submit-grades.store');
         Route::get('/view-submission/{submissionId}', [StudentController::class, 'viewSubmission'])->name('view-submission');
         Route::get('/grade-submissions', [StudentController::class, 'submissionsList'])->name('student.grade-submissions');
+        Route::post('/profile/upload', [StudentController::class, 'uploadProfileImage'])->name('profile.upload');
     });
 
   

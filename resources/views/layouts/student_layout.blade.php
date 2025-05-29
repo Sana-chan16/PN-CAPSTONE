@@ -164,8 +164,8 @@
                                 Grade Submissions
                             </a>
                         </li> --}}
-                        <li>
-                            <a href="#">
+                        <li class="{{ request()->routeIs('student.profile') ? 'active' : '' }}">
+                            <a href="{{ route('student.profile') }}">
                                 <img src="{{ asset('images/me.png') }}" alt="Profile">
                                 Profile
                             </a>
