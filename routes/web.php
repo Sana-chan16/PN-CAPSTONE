@@ -86,6 +86,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/terms/{school}', [AnalyticsController::class, 'getTermsBySchool'])->name('terms');
             Route::get('/class-submissions/{school}/{class}', [AnalyticsController::class, 'getClassSubmissions'])->name('class-submissions');
             Route::get('/class-grades-data', [AnalyticsController::class, 'fetchClassGrades'])->name('class-grades-data');
+            // Added route for class-subject-progress
+            Route::get('/class-subject-progress', function() {
+                return view('training.analytics.class-subject-progress');
+            })->name('class-subject-progress');
         });
 
 

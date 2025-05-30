@@ -11,9 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::dropIfExists('class_student');
-        Schema::dropIfExists('classes');
-
         Schema::create('classes', function (Blueprint $table) {
             $table->id();
             $table->string('class_id')->unique();
@@ -30,9 +27,12 @@ return new class extends Migration
 
         Schema::create('class_student', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('class_id')->constrained('classes')->onDelete('cascade');
+            $table->string('class_id');
             $table->string('user_id'); // foreign key added later
             $table->timestamps();
+            $table->foreign('class_id')->references('class_id')->on('classes')->onDelete('cascade');
+            $table->foreign('user_id')->references('user_id')->on('pnph_users')->onDelete('cascade');
+            $table->unique(['class_id', 'user_id']);
         });
     }
 
