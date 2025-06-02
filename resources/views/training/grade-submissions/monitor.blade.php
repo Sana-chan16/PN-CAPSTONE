@@ -277,6 +277,41 @@
             </div>
         @endif
     @endforeach
+
+    @if(isset($gradeSubmissions) && $gradeSubmissions->hasPages())
+        <div class="pagination-container" style="margin-top: 30px; text-align: center;">
+            <nav>
+                <ul class="pagination" style="display: inline-flex; list-style: none; padding: 0;">
+                    {{-- Previous Page Link --}}
+                    @if ($gradeSubmissions->onFirstPage())
+                        <li class="page-item disabled" aria-disabled="true">
+                            <span class="page-link" style="padding: 8px 16px; margin: 0 4px; border: 1px solid #ddd; color: #999; cursor: not-allowed;">Previous</span>
+                        </li>
+                    @else
+                        <li class="page-item">
+                            <a class="page-link" href="{{ $gradeSubmissions->previousPageUrl() }}" rel="prev" style="padding: 8px 16px; margin: 0 4px; border: 1px solid #ddd; text-decoration: none; color: #333;">Previous</a>
+                        </li>
+                    @endif
+
+                    {{-- Current Page Info --}}
+                    <li class="page-item active" style="margin: 0 10px; display: flex; align-items: center;">
+                        <span>Page {{ $gradeSubmissions->currentPage() }} of {{ $gradeSubmissions->lastPage() }}</span>
+                    </li>
+
+                    {{-- Next Page Link --}}
+                    @if ($gradeSubmissions->hasMorePages())
+                        <li class="page-item">
+                            <a class="page-link" href="{{ $gradeSubmissions->nextPageUrl() }}" rel="next" style="padding: 8px 16px; margin: 0 4px; border: 1px solid #ddd; text-decoration: none; color: #333;">Next</a>
+                        </li>
+                    @else
+                        <li class="page-item disabled" aria-disabled="true">
+                            <span class="page-link" style="padding: 8px 16px; margin: 0 4px; border: 1px solid #ddd; color: #999; cursor: not-allowed;">Next</span>
+                        </li>
+                    @endif
+                </ul>
+            </nav>
+        </div>
+    @endif
      </div>
 
 <style>

@@ -95,11 +95,8 @@ class GradeSubmissionController extends Controller
         return view('training.grade-submissions.index', compact('gradeSubmissions'));
     }
 
-    public function monitor()
+    public function monitor(Request $request)
     {
-        // Fetch all grade submissions from the database
-        $gradeSubmissions = GradeSubmission::with(['students', 'subjects'])->get();
-
         // Get all schools
         $schools = School::all();
         
@@ -111,16 +108,53 @@ class GradeSubmissionController extends Controller
                 ->pluck('class_name', 'class_id');
         });
 
+        // Build the query with filters
+        $query = GradeSubmission::with(['students', 'subjects', 'school']);
+
+        // Apply school filter if selected
+        if ($request->has('school_id') && $request->school_id) {
+            $query->where('school_id', $request->school_id);
+        }
+
+        // Apply class filter if selected
+        if ($request->has('class_id') && $request->class_id) {
+            $query->where('class_id', $request->class_id);
+        }
+
+        // Apply semester/term/year filter if selected
+        if ($request->has('filter_key') && $request->filter_key) {
+            list($semester, $term, $year) = explode(' ', $request->filter_key . '  ');
+            $query->where('semester', $semester)
+                  ->where('term', $term)
+                  ->where('academic_year', $year);
+        }
+
         // Get unique filter options (semester, term, academic year combinations)
-        $filterOptions = $gradeSubmissions->map(function($submission) {
+        $allSubmissions = GradeSubmission::select('semester', 'term', 'academic_year')
+            ->distinct()
+            ->orderBy('academic_year', 'desc')
+            ->orderBy('semester')
+            ->orderBy('term')
+            ->get();
+            
+        $filterOptions = $allSubmissions->map(function($submission) {
             return $submission->semester . ' ' . $submission->term . ' ' . $submission->academic_year;
-        })->unique()->sortDesc()->toArray();
+        })->toArray();
+
+        // Get filtered and paginated submissions
+        $gradeSubmissions = $query->orderBy('created_at', 'desc')
+                                ->paginate(10)
+                                ->withQueryString();
+
+        // Group submissions by school for display
+        $submissionsBySchool = $gradeSubmissions->groupBy('school_id');
 
         return view('training.grade-submissions.monitor', compact(
             'gradeSubmissions',
             'schools',
             'classesBySchool',
-            'filterOptions'
+            'filterOptions',
+            'submissionsBySchool'
         ));
     }
 

@@ -252,6 +252,19 @@ class SchoolController extends Controller
                     );
                     $newSubjectIds[] = $subject->id;
                 }
+                
+                // Delete subjects that were removed from the form
+                $subjectsToDelete = array_diff($existingSubjectIds, $newSubjectIds);
+                if (!empty($subjectsToDelete)) {
+                    // First, delete related records in the class_subject pivot table
+                    DB::table('class_subject')
+                        ->whereIn('subject_id', $subjectsToDelete)
+                        ->delete();
+                    
+                    // Then delete the subjects
+                    $school->subjects()->whereIn('id', $subjectsToDelete)->delete();
+                    \Log::info('Deleted subjects: ' . implode(',', $subjectsToDelete));
+                }
                 \Log::info('Subjects updated');
 
                 // Handle new classes

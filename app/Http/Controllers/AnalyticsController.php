@@ -32,16 +32,6 @@ class AnalyticsController extends Controller
             'defaultSchool' => $school
         ]);
     }
-    // Show the Class Grades page
-    public function showClassGrades()
-    {
-        // Get the first school's passing grade range as default
-        $school = School::select('passing_grade_min', 'passing_grade_max')->first();
-        
-        return view('training.analytics.class-grades', [
-            'defaultSchool' => $school
-        ]);
-    }
 
     // Get all schools
     public function getSchools()
@@ -132,6 +122,9 @@ class AnalyticsController extends Controller
         $gradeSubmission = GradeSubmission::where('id', $submissionId)
             ->where('school_id', $schoolId)
             ->where('class_id', $classId)
+            ->with(['subjects' => function($query) {
+                $query->select('subjects.id', 'subjects.name');
+            }])
             ->first();
             
         if (!$gradeSubmission) {
@@ -141,28 +134,40 @@ class AnalyticsController extends Controller
             ]);
         }
 
-        // Get all subjects for this submission
-        $subjects = $gradeSubmission->subjects()->get();
+        // Get unique subjects from the submission
+        $subjects = $gradeSubmission->subjects->unique('id');
         
-        // Get all students with their grades for this submission
-        $studentGrades = DB::table('grade_submission_subject')
+        // Get all grades for this submission, grouped by subject and student
+        $grades = DB::table('grade_submission_subject')
             ->join('subjects', 'subjects.id', '=', 'grade_submission_subject.subject_id')
             ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
             ->where('grade_submission_subject.status', 'approved')
             ->select(
-                'grade_submission_subject.user_id',
                 'subjects.id as subject_id',
                 'subjects.name as subject_name',
+                'grade_submission_subject.user_id',
                 'grade_submission_subject.grade',
                 'grade_submission_subject.student_status'
             )
-            ->get()
-            ->groupBy('subject_name');
+            ->orderBy('subjects.id')
+            ->get();
             
+        // Group grades by subject
+        $groupedGrades = $grades->groupBy('subject_name');
+        
         // Initialize results array
         $subjectResults = [];
+        $processedSubjects = [];
         
         foreach ($subjects as $subject) {
+            // Skip if we've already processed this subject
+            if (in_array($subject->id, $processedSubjects)) {
+                continue;
+            }
+            
+            $processedSubjects[] = $subject->id;
+            
+            // Initialize counters for this subject
             $passed = 0;
             $failed = 0;
             $inc = 0;
@@ -170,22 +175,21 @@ class AnalyticsController extends Controller
             $nc = 0;
             $pending = false;
             $needIntervention = false;
+            $processedStudents = [];
             
             // Get grades for this specific subject
-            $subjectGrades = $studentGrades->get($subject->name, collect());
+            $subjectGrades = $groupedGrades->get($subject->name, collect());
             
-            // Count unique students per grade category for this subject
-            $uniqueStudents = [];
-            
+            // Process each student's grade for this subject
             foreach ($subjectGrades as $grade) {
                 $studentId = $grade->user_id;
                 
                 // Skip if we've already processed this student for this subject
-                if (in_array($studentId, $uniqueStudents)) {
+                if (in_array($studentId, $processedStudents)) {
                     continue;
                 }
                 
-                $uniqueStudents[] = $studentId;
+                $processedStudents[] = $studentId;
                 $gradeValue = $grade->grade;
                 
                 // Check student status first
@@ -217,12 +221,12 @@ class AnalyticsController extends Controller
             // Determine remarks
             $remarks = '';
             $totalGrades = $passed + $failed + $inc + $dr + $nc;
+            $totalStudents = $totalGrades;
             
             if ($totalGrades === 0) {
                 $remarks = 'No Submission Recorded';
-            } elseif ($pending) {
-                $remarks = 'Pending';
-            } elseif ($needIntervention || $nc > 0 || $failed > 0) {
+            } elseif ($inc > 0 || $dr > 0 || $nc > 0 || $failed > 0) {
+                // Mark as Need Intervention if there are any special grades or failing grades
                 $remarks = 'Need Intervention';
             } else {
                 $remarks = 'No Intervention Needed';
@@ -350,217 +354,5 @@ class AnalyticsController extends Controller
             ],
             'class_name' => $gradeSubmission->classModel->class_name ?? 'Unknown Class'
         ]);
-    }
-    
-    public function fetchClassGrades(\Illuminate\Http\Request $request)
-    {
-        $schoolId = $request->query('school_id');
-        $classId = $request->query('class_id');
-        $submissionId = $request->query('submission_id');
-        if (!$schoolId || !$classId || !$submissionId) {
-            return response()->json([]);
-        }
-
-        $school = School::where('school_id', $schoolId)->first();
-        if (!$school) return response()->json([]);
-
-        // Get the GradeSubmission by id
-        $gradeSubmission = GradeSubmission::where('id', $submissionId)
-            ->where('school_id', $schoolId)
-            ->where('class_id', $classId)
-            ->first();
-            
-        if (!$gradeSubmission) {
-            return response()->json([
-                'error' => 'Submission not found',
-                'submission_status' => 'not_found'
-            ]);
-        }
-
-        // Get the user and check if they are admin/trainer
-        $user = auth()->user();
-        $isAdminOrTrainer = $user && in_array($user->user_role, ['admin', 'trainer']);
-        
-        // We no longer block access based on the main submission status
-        // All users can see the grades, but the status will be shown per student
-
-        // Get subjects for this submission
-        $subjects = $gradeSubmission->subjects()->pluck('name')->toArray();
-        // Get all students for this class (distinct to avoid duplicates)
-        $students = $gradeSubmission->students()
-            ->with(['studentDetail'])
-            ->distinct('users.id')
-            ->get();
-            
-        // Get all grades for this submission with student_status
-        $gradesRaw = DB::table('grade_submission_subject')
-            ->select('*', 'student_status as status')
-            ->where('grade_submission_id', $gradeSubmission->id)
-            ->get();
-            
-        // Group grades by user_id for easier access
-        $gradesByStudent = [];
-        foreach ($gradesRaw as $grade) {
-            if (!isset($gradesByStudent[$grade->user_id])) {
-                $gradesByStudent[$grade->user_id] = [];
-            }
-            $gradesByStudent[$grade->user_id][$grade->subject_id] = $grade;
-        }
-
-        $studentRows = [];
-        $hasGrades = false;
-        $allGradesComplete = true;
-        
-        foreach ($students as $student) {
-            $studentId = $student->studentDetail->student_id ?? $student->user_id;
-            
-            // Skip if we've already processed this student
-            if (isset($studentRows[$studentId])) {
-                continue;
-            }
-            
-            $row = [
-                'student_id' => $studentId,
-                'full_name' => $student->user_lname . ', ' . $student->user_fname,
-                'grades' => [],
-                'average' => '',
-                'status' => '',
-                'subjects' => $subjects,
-                'has_grades' => false,
-                'user_id' => $student->user_id  // Keep user_id for reference
-            ];
-            
-            $numericGrades = [];
-            $pending = false;
-            $hasAnyGrade = false;
-            
-            foreach ($subjects as $subjectName) {
-                $subject = Subject::where('name', $subjectName)->first();
-                $gradeObj = $gradesRaw->first(function($g) use ($student, $subject) {
-                    return $g->user_id == $student->user_id && $g->subject_id == ($subject ? $subject->id : null);
-                });
-                
-                $grade = $gradeObj ? $gradeObj->grade : '';
-                
-                // Get both status and student_status
-                $status = $gradeObj ? ($gradeObj->status ?? 'pending') : 'pending';
-                $studentStatus = $gradeObj ? ($gradeObj->student_status ?? $status) : $status;
-                
-                // Use student_status if it's set, otherwise fall back to status
-                $effectiveStatus = !empty($studentStatus) ? $studentStatus : $status;
-                
-                // Normalize status to lowercase for comparison
-                $normalizedStatus = strtolower($effectiveStatus);
-                
-                // Create grade object with status
-                $gradeData = [
-                    'grade' => $grade,
-                    'status' => $normalizedStatus === 'approved' ? 'approved' : $effectiveStatus
-                ];
-                
-                // Log the status for debugging
-                \Log::debug('Grade status check', [
-                    'student_id' => $student->user_id,
-                    'subject_id' => $subject ? $subject->id : null,
-                    'status' => $status,
-                    'student_status' => $studentStatus,
-                    'effective_status' => $effectiveStatus,
-                    'normalized' => $normalizedStatus,
-                    'grade' => $grade,
-                    'has_student_status' => isset($gradeObj->student_status),
-                    'has_status' => isset($gradeObj->status)
-                ]);
-                
-                // Log the status for debugging
-                \Log::debug('Grade status check', [
-                    'student_id' => $student->user_id,
-                    'subject_id' => $subject ? $subject->id : null,
-                    'status' => $status,
-                    'normalized' => $normalizedStatus,
-                    'grade' => $grade
-                ]);
-                
-                if ($grade !== '') {
-                    $hasGrades = true;
-                    $hasAnyGrade = true;
-                    $row['has_grades'] = true;
-                    
-                    // Only consider the grade if it's approved or status is not being checked
-                    if ($normalizedStatus === 'approved') {
-                        if (in_array($grade, ['INC', 'DR', 'NC'])) {
-                            $pending = true;
-                            $allGradesComplete = false;
-                            $gradeData['grade'] = $grade;
-                        } elseif (is_numeric($grade)) {
-                            $numericGrades[] = floatval($grade);
-                        } else {
-                            $allGradesComplete = false;
-                            $gradeData['grade'] = '';
-                        }
-                    } else {
-                        // If grade exists but not approved, mark as pending
-                        $pending = true;
-                        $allGradesComplete = false;
-                    }
-                } else {
-                    $allGradesComplete = false;
-                    $gradeData['grade'] = '';
-                }
-                
-                $row['grades'][] = $gradeData;
-            }
-            // Calculate average
-            $row['average'] = count($numericGrades) ? number_format(array_sum($numericGrades)/count($numericGrades), 2) : '';
-            // Determine status
-            if ($pending) {
-                $row['status'] = 'Pending';
-            } elseif (count($numericGrades) === count($subjects)) {
-                $allPassed = true;
-                foreach ($numericGrades as $g) {
-                    if ($g < $school->passing_grade_min || $g > $school->passing_grade_max) {
-                        $allPassed = false;
-                        break;
-                    }
-                }
-                $row['status'] = $allPassed ? 'Passed' : 'Failed';
-            } else {
-                $row['status'] = 'Pending';
-            }
-            // Use student_id as the key to avoid duplicates
-            $studentRows[$studentId] = $row;
-        }
-        // Convert associative array to indexed array for the response
-        $studentRows = array_values($studentRows);
-        
-        // Check if any grades exist
-        $hasAnyGrades = !empty(array_filter($studentRows, function($row) {
-            return $row['has_grades'];
-        }));
-        
-        // Add submission info to response
-        $response = [
-            'students' => $studentRows,
-            'subjects' => $subjects,
-            'submission' => [
-                'term' => $gradeSubmission->term,
-                'semester' => $gradeSubmission->semester,
-                'academic_year' => $gradeSubmission->academic_year,
-                'status' => 'individual_status' // Indicate that status is handled per student
-            ],
-            // Add submission data at root level for easier access
-            'term' => $gradeSubmission->term,
-            'semester' => $gradeSubmission->semester,
-            'academic_year' => $gradeSubmission->academic_year,
-            // School and class info
-            'school' => [
-                'name' => $school->name,
-                'passing_grade_min' => $school->passing_grade_min,
-                'passing_grade_max' => $school->passing_grade_max
-            ],
-            'class_name' => $gradeSubmission->classModel->class_name ?? 'Unknown Class',
-            'school_name' => $school->name
-        ];
-        
-        return response()->json($response);
     }
 }

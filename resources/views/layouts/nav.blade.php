@@ -234,9 +234,6 @@
                         <img src="{{ asset('images/analytics.png') }}" alt="Analytics"> Analytics
                     </a>
                     <div class="dropdown-content">
-                        <a href="{{ route('training.analytics.class-grades') }}" class="{{ request()->routeIs('training.analytics.class-grades') ? 'active' : '' }}">
-                            <img src="{{ asset('images/class grades.png') }}" alt="Class Grades"> Class Grades
-                        </a>
                         <a href="{{ route('training.analytics.subject-progress') }}" class="{{ request()->routeIs('training.analytics.subject-progress') ? 'active' : '' }}">
                             <img src="{{ asset('images/subject progress.png') }}" alt="Subject Progress"> Subject Progress
                         </a>

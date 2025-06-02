@@ -100,6 +100,8 @@ class TrainingController extends Controller
                     $q->where('batch', $request->batch);
                 });
             })
+            ->orderBy('user_lname')
+            ->orderBy('user_fname')
             ->paginate(10);
     // Pass the role to the view to conditionally show "Edit" button
     $userRole = Auth::user()->user_role;

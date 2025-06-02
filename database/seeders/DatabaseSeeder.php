@@ -13,6 +13,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(AdminUserSeeder::class);
+        $this->call([
+            AdminUserSeeder::class,
+            // Uncomment the line below to clear all student data
+            // ClearStudentDataSeeder::class,
+            // Uncomment the line below to add dummy grades and proofs
+            // DummyGradesAndProofsSeeder::class,
+        ]);
     }
 }

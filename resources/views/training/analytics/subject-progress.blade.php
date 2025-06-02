@@ -382,11 +382,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         },
                         beginAtZero: true,
                         stacked: true,
-                        max: 10, // Set maximum value to 10
+                        max: 70, // Set maximum value to 70
                         min: 0,   // Ensure it starts at 0
                         ticks: {
-                            stepSize: 1,  // Show every integer value
-                            maxTicksLimit: 11, // 0 to 10 inclusive
+                            stepSize: 5,  // Show every 5th value to prevent crowding
+                            maxTicksLimit: 15, // 0 to 70 with step of 5
                             callback: function(value) {
                                 // Only show integer values
                                 if (value % 1 === 0) {
