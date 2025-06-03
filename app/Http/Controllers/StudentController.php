@@ -63,7 +63,76 @@ class StudentController extends Controller
             });
         });
 
-        return view('student.dashboard', compact('gradeSubmissions', 'filterOptions', 'filterKey'));
+        // Calculate grade statistics for the student
+        $gradeStats = [
+            'pass' => 0,
+            'fail' => 0,
+            'inc' => 0,
+            'nc' => 0,
+            'dr' => 0
+        ];
+        
+        // Arrays to store detailed grade information
+        $gradeDetails = [
+            'pass' => [],
+            'fail' => [],
+            'inc' => [],
+            'nc' => [],
+            'dr' => []
+        ];
+
+        // Get all grade submissions for this student with subject information
+        $allGrades = DB::table('grade_submission_subject')
+            ->join('subjects', 'grade_submission_subject.subject_id', '=', 'subjects.id')
+            ->join('grade_submissions', 'grade_submission_subject.grade_submission_id', '=', 'grade_submissions.id')
+            ->where('grade_submission_subject.user_id', $user->user_id)
+            ->whereNotNull('grade_submission_subject.grade')
+            ->select(
+                'grade_submission_subject.grade',
+                'subjects.name as subject_name',
+                'subjects.offer_code as subject_code',
+                'grade_submissions.semester',
+                'grade_submissions.term',
+                'grade_submissions.academic_year'
+            )
+            ->get();
+
+        foreach ($allGrades as $gradeEntry) {
+            $grade = strtoupper($gradeEntry->grade);
+            $subjectInfo = [
+                'subject_name' => $gradeEntry->subject_name,
+                'subject_code' => $gradeEntry->subject_code,
+                'grade' => $gradeEntry->grade,
+                'semester' => $gradeEntry->semester,
+                'term' => $gradeEntry->term,
+                'academic_year' => $gradeEntry->academic_year
+            ];
+            
+            // Check for special grades
+            if ($grade === 'INC') {
+                $gradeStats['inc']++;
+                $gradeDetails['inc'][] = $subjectInfo;
+            } elseif ($grade === 'NC') {
+                $gradeStats['nc']++;
+                $gradeDetails['nc'][] = $subjectInfo;
+            } elseif ($grade === 'DR') {
+                $gradeStats['dr']++;
+                $gradeDetails['dr'][] = $subjectInfo;
+            } 
+            // Check for numeric grades
+            elseif (is_numeric($grade)) {
+                $numericGrade = floatval($grade);
+                if ($numericGrade <= 3.0) {
+                    $gradeStats['pass']++;
+                    $gradeDetails['pass'][] = $subjectInfo;
+                } else {
+                    $gradeStats['fail']++;
+                    $gradeDetails['fail'][] = $subjectInfo;
+                }
+            }
+        }
+
+        return view('student.dashboard', compact('gradeSubmissions', 'filterOptions', 'filterKey', 'gradeStats', 'gradeDetails'));
     }
 
     public function showSubmissionForm($submissionId)

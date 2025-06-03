@@ -47,6 +47,14 @@ class SchoolController extends Controller
         try {
             // Debug the request data
             \Log::info('Form data:', $request->all());
+            
+            // Handle JSON-encoded terms if needed
+            $terms = $request->terms;
+            if (is_string($terms)) {
+                $terms = json_decode($terms, true) ?? [];
+                $request->merge(['terms' => $terms]);
+            }
+            
             // Validate the request data
             $validator = \Validator::make($request->all(), [
                 'school_id' => 'required|string|unique:schools,school_id',
@@ -70,6 +78,13 @@ class SchoolController extends Controller
                 'classes.*.student_ids.*' => 'exists:pnph_users,user_id',
                 'terms' => 'required|array|min:1',
                 'terms.*' => 'in:prelim,midterm,semi_final,final',
+            ], [
+                'terms.required' => 'Please select at least one term.',
+                'subjects.required' => 'Please add at least one subject.',
+                'classes.required' => 'Please add at least one class.',
+                'classes.*.student_ids.required' => 'Please select at least one student for each class.',
+                'school_id.unique' => 'A school with this ID already exists. Please choose a different school ID.',
+                'classes.*.class_id.unique' => 'One of the class IDs you entered is already in use. Please use unique class IDs.',
             ]);
 
             if ($validator->fails()) {
