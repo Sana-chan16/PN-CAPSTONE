@@ -223,7 +223,7 @@
                         </a>
 
                         <a href="{{ route('training.intern-grades.index') }}" class="{{ request()->routeIs('training.intern-grades.*') ? 'active' : '' }}">
-                            <img src="{{ asset('images/intern.png') }}" alt="Intern"> Intern
+                            <img src="{{ asset('images/5351253.png') }}" alt="Intern"> Intern
                         </a>
 
                     </div>

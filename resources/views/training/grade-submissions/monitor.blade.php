@@ -39,7 +39,7 @@
                         <label for="class_id" class="visually-hidden">Class</label>
                         <select name="class_id" id="class_id" class="form-control-custom" onchange="this.form.submit()">
                             <option value="">All Classes</option>
-                            @if(request('school_id'))
+                            @if(request('school_id') && isset($classesBySchool[request('school_id')]))
                                 @foreach($classesBySchool[request('school_id')] as $class)
                                     <option value="{{ $class->class_id }}" {{ request('class_id') == $class->class_id ? 'selected' : '' }}>
                                         {{ $class->name }}
@@ -72,205 +72,228 @@
     </div>
 
     @foreach($schools as $school)
-        @php $schoolSubmissions = $submissionsBySchool[$school->school_id] ?? collect(); @endphp
+        @php 
+            $schoolSubmissions = $submissionsBySchool[$school->school_id] ?? collect();
+            // Only show submissions for the selected school if a school is selected
+            if (request('school_id') && request('school_id') != $school->school_id) {
+                continue;
+            }
+            
+            // Group submissions by class
+            $submissionsByClass = $schoolSubmissions->groupBy('class_id');
+        @endphp
         @if($schoolSubmissions->isNotEmpty())
             <div class="school-container">
                 <div class="school-header">
                     <h3>{{ $school->name }}</h3>
                 </div>
                 <div class="school-content">
-                    @foreach($schoolSubmissions as $gradeSubmission)
+                    @foreach($submissionsByClass as $classId => $classSubmissions)
                         @php
-                            // Fetch students for this submission
-                            $students = \DB::table('grade_submission_subject')
-                                ->join('pnph_users', 'grade_submission_subject.user_id', '=', 'pnph_users.user_id')
-                                ->join('student_details', 'pnph_users.user_id', '=', 'student_details.user_id')
-                                ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
-                                ->where('pnph_users.user_role', 'student')
-                                ->select('pnph_users.user_id', 'pnph_users.user_fname', 'pnph_users.user_lname', 'student_details.student_id')
-                                ->distinct()
-                                ->get()
-                                ->map(function ($student) {
-                                    return (object)[
-                                        'student_id' => $student->student_id,
-                                        'user_id' => $student->user_id,
-                                        'name' => $student->user_fname . ' ' . $student->user_lname
-                                    ];
-                                });
-                            // Fetch subjects for this submission
-                            $subjects = \DB::table('grade_submission_subject')
-                                ->join('subjects', 'grade_submission_subject.subject_id', '=', 'subjects.id')
-                                ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
-                                ->select('subjects.*')
-                                ->distinct()
-                                ->get();
-                            // Fetch grades for this submission
-                            $rawGrades = \DB::table('grade_submission_subject')
-                                ->join('subjects', 'grade_submission_subject.subject_id', '=', 'subjects.id')
-                                ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
-                                ->select(
-                                    'grade_submission_subject.user_id',
-                                    'grade_submission_subject.subject_id',
-                                    'grade_submission_subject.grade',
-                                    'grade_submission_subject.status',
-                                    'subjects.name as subject_name'
-                                )
-                                ->get();
-                            $grades = [];
-                            foreach ($rawGrades as $grade) {
-                                if (!isset($grades[$grade->user_id])) {
-                                    $grades[$grade->user_id] = [];
-                                }
-                                $grades[$grade->user_id][$grade->subject_id] = (object)[
-                                    'grade' => $grade->grade,
-                                    'status' => $grade->status,
-                                    'subject_name' => $grade->subject_name
-                                ];
+                            // Get class name from the first submission
+                            $className = $classSubmissions->first()->classModel ? $classSubmissions->first()->classModel->name : 'Unknown Class';
+                            
+                            // Skip if class filter is set and doesn't match
+                            if (request('class_id') && $classId != request('class_id')) {
+                                continue;
                             }
                         @endphp
-                        <div class="submission-section">
-                            <div class="submission-header">
-                                <h4>{{ $gradeSubmission->semester }} {{ $gradeSubmission->term }} {{ $gradeSubmission->academic_year }}</h4>
+                        <div class="class-section">
+                            <div class="class-header">
+                                <h4>{{ $className }}</h4>
                             </div>
-                            <div class="table-responsive-custom">
-                                <table class="grade-monitor-table">
-                                    <thead>
-                                        <tr>
-                                            <th class="text-center-custom" style="width: 80px">Student ID</th>
-                                            <th style="width: 180px">Name</th>
-                                            @foreach($subjects as $subject)
-                                                <th class="text-center-custom">{{ $subject->name }}</th>
-                                            @endforeach
-                                            <th class="text-center-custom" style="width: 120px">Proof</th>
-                                            <th class="text-center-custom" style="width: 120px">Status</th>
-                                            <th class="text-center-custom" style="width: 120px">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($students as $student)
-                                            <tr data-submission-id="{{ $gradeSubmission->id }}" data-student-id="{{ $student->user_id }}">
-                                                <td class="text-center-custom small-text">{{ $student->student_id }}</td>
-                                                <td class="small-text">{{ $student->name }}</td>
-                                                @foreach($subjects as $subject)
-                                                    <td class="text-center-custom">
-                                                        @php
-                                                            $grade = $grades[$student->user_id][$subject->id] ?? null;
-                                                            $gradeValue = $grade ? $grade->grade : null;
-                                                        @endphp
-                                                        
-                                                        @if($gradeValue !== null)
-                                                            <div class="grade-value small-text">
-                                                                @if(in_array(strtoupper($gradeValue), ['INC', 'NC', 'DR']))
-                                                                    {{ strtoupper($gradeValue) }}
+                            @foreach($classSubmissions as $gradeSubmission)
+                                @php
+                                    // Fetch students for this submission
+                                    $students = \DB::table('grade_submission_subject')
+                                        ->join('pnph_users', 'grade_submission_subject.user_id', '=', 'pnph_users.user_id')
+                                        ->join('student_details', 'pnph_users.user_id', '=', 'student_details.user_id')
+                                        ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
+                                        ->where('pnph_users.user_role', 'student')
+                                        ->select('pnph_users.user_id', 'pnph_users.user_fname', 'pnph_users.user_lname', 'student_details.student_id')
+                                        ->distinct()
+                                        ->get()
+                                        ->map(function ($student) {
+                                            return (object)[
+                                                'student_id' => $student->student_id,
+                                                'user_id' => $student->user_id,
+                                                'name' => $student->user_fname . ' ' . $student->user_lname
+                                            ];
+                                        });
+
+                                    // Fetch subjects for this submission
+                                    $subjects = \DB::table('grade_submission_subject')
+                                        ->join('subjects', 'grade_submission_subject.subject_id', '=', 'subjects.id')
+                                        ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
+                                        ->select('subjects.*')
+                                        ->distinct()
+                                        ->get();
+
+                                    // Fetch grades for this submission
+                                    $rawGrades = \DB::table('grade_submission_subject')
+                                        ->join('subjects', 'grade_submission_subject.subject_id', '=', 'subjects.id')
+                                        ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
+                                        ->select(
+                                            'grade_submission_subject.user_id',
+                                            'grade_submission_subject.subject_id',
+                                            'grade_submission_subject.grade',
+                                            'grade_submission_subject.status',
+                                            'subjects.name as subject_name'
+                                        )
+                                        ->get();
+
+                                    $grades = [];
+                                    foreach ($rawGrades as $grade) {
+                                        if (!isset($grades[$grade->user_id])) {
+                                            $grades[$grade->user_id] = [];
+                                        }
+                                        $grades[$grade->user_id][$grade->subject_id] = (object)[
+                                            'grade' => $grade->grade,
+                                            'status' => $grade->status,
+                                            'subject_name' => $grade->subject_name
+                                        ];
+                                    }
+                                @endphp
+                                <div class="submission-section">
+                                    <div class="submission-header">
+                                        <h5>{{ $gradeSubmission->semester }} {{ $gradeSubmission->term }} {{ $gradeSubmission->academic_year }}</h5>
+                                    </div>
+                                    <div class="table-responsive-custom">
+                                        <table class="grade-monitor-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-center-custom" style="width: 80px">Student ID</th>
+                                                    <th style="width: 180px">Name</th>
+                                                    @foreach($subjects as $subject)
+                                                        <th class="text-center-custom">{{ $subject->name }}</th>
+                                                    @endforeach
+                                                    <th class="text-center-custom" style="width: 120px">Proof</th>
+                                                    <th class="text-center-custom" style="width: 120px">Status</th>
+                                                    <th class="text-center-custom" style="width: 120px">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($students as $student)
+                                                    <tr data-submission-id="{{ $gradeSubmission->id }}" data-student-id="{{ $student->user_id }}">
+                                                        <td class="text-center-custom small-text">{{ $student->student_id }}</td>
+                                                        <td class="small-text">{{ $student->name }}</td>
+                                                        @foreach($subjects as $subject)
+                                                            <td class="text-center-custom">
+                                                                @php
+                                                                    $grade = $grades[$student->user_id][$subject->id] ?? null;
+                                                                    $gradeValue = $grade ? $grade->grade : null;
+                                                                @endphp
+                                                                
+                                                                @if($gradeValue !== null)
+                                                                    <div class="grade-value small-text">
+                                                                        @if(in_array(strtoupper($gradeValue), ['INC', 'NC', 'DR']))
+                                                                            {{ strtoupper($gradeValue) }}
+                                                                        @else
+                                                                            {{ number_format((float)$gradeValue, 1) }}
+                                                                        @endif
+                                                                    </div>
                                                                 @else
-                                                                    {{ number_format((float)$gradeValue, 1) }}
+                                                                    <span class="text-muted-custom small-text">Not submitted</span>
+                                                                @endif
+                                                            </td>
+                                                        @endforeach
+                                                        <td class="text-center-custom">
+                                                            @php
+                                                                $proof = \App\Models\GradeSubmissionProof::where('grade_submission_id', $gradeSubmission->id)
+                                                                    ->where('user_id', $student->user_id)
+                                                                    ->first();
+                                                            @endphp
+                                                            @if($proof)
+                                                                <a href="{{ route('training.grade-submissions.view-proof', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}"
+                                                                   class="btn-custom btn-primary-custom">
+                                                                    <i class="fas fa-eye"></i> View Proof
+                                                                </a>
+                                                            @else
+                                                                <span class="text-muted-custom small-text">No proof</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-center-custom">
+                                                            @php
+                                                                // Check if student has uploaded all grades
+                                                                $hasAllGrades = true;
+                                                                foreach($subjects as $subject) {
+                                                                    $grade = $grades[$student->user_id][$subject->id] ?? null;
+                                                                    $gradeValue = $grade ? $grade->grade : null;
+                                                                    if ($gradeValue === null) {
+                                                                        $hasAllGrades = false;
+                                                                        break;
+                                                                    }
+                                                                }
+                                                                
+                                                                // Only check for approval status if all grades are uploaded
+                                                                if ($hasAllGrades) {
+                                                                    $status = DB::table('grade_submission_subject')
+                                                                        ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
+                                                                        ->where('grade_submission_subject.user_id', $student->user_id)
+                                                                        ->value('status') ?? 'pending';
+                                                                } else {
+                                                                    $status = 'pending';
+                                                                }
+                                                            @endphp
+                                                            <span class="status-badge {{ $status === 'approved' ? 'approved' : ($status === 'rejected' ? 'rejected' : 'pending') }}">
+                                                                {{ $hasAllGrades ? ucfirst($status) : 'Pending Grades' }}
+                                                            </span>
+                                                        </td>
+                                                        <td class="text-center-custom">
+                                                            <div class="action-buttons">
+                                                                @php
+                                                                    $hasIncGrade = false;
+                                                                    foreach($subjects as $subject) {
+                                                                        $grade = $grades[$student->user_id][$subject->id] ?? null;
+                                                                        $gradeValue = $grade ? $grade->grade : null;
+                                                                        if(strtoupper($gradeValue) === 'INC') {
+                                                                            $hasIncGrade = true;
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                @endphp
+                                                                
+                                                                @if($proof && $proof->status === 'pending')
+                                                                    <div class="action-group">
+                                                                        <form method="POST" action="{{ route('training.grade-submissions.update-proof-status', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}" class="d-inline">
+                                                                            @csrf
+                                                                            <input type="hidden" name="status" value="approved">
+                                                                            <button type="submit" class="action-button btn-success-custom">
+                                                                                <i class="fas fa-check-circle"></i> Approve
+                                                                            </button>
+                                                                        </form>
+                                                                        <form method="POST" action="{{ route('training.grade-submissions.update-proof-status', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}" class="d-inline">
+                                                                            @csrf
+                                                                            <input type="hidden" name="status" value="rejected">
+                                                                            <button type="submit" class="action-button btn-danger-custom">
+                                                                                <i class="fas fa-times-circle"></i> Reject
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
+                                                                @else
+                                                                    @if($hasIncGrade)
+                                                                        <form method="POST" action="{{ route('training.grade-submissions.update-proof-status', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}" class="d-inline">
+                                                                            @csrf
+                                                                            <input type="hidden" name="status" value="pending">
+                                                                            <button type="submit" class="action-button btn-warning-custom">
+                                                                                <i class="fas fa-edit"></i> Edit Status
+                                                                            </button>
+                                                                        </form>
+                                                                    @else
+                                                                        <span class="text-muted-custom small-text">
+                                                                            Status is final and cannot be changed
+                                                                        </span>
+                                                                    @endif
                                                                 @endif
                                                             </div>
-                                                        @else
-                                                            <span class="text-muted-custom small-text">Not submitted</span>
-                                                        @endif
-                                                    </td>
+                                                        </td>
+                                                    </tr>
                                                 @endforeach
-                                                <td class="text-center-custom">
-                                                    @php
-                                                        $proof = \App\Models\GradeSubmissionProof::where('grade_submission_id', $gradeSubmission->id)
-                                                            ->where('user_id', $student->user_id)
-                                                            ->first();
-                                                    @endphp
-                                                    @if($proof)
-                                                        <a href="{{ route('training.grade-submissions.view-proof', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}"
-                                                           class="btn-custom btn-primary-custom">
-                                                            <i class="fas fa-eye"></i> View Proof
-                                                        </a>
-                                                    @else
-                                                        <span class="text-muted-custom small-text">No proof</span>
-                                                    @endif
-                                                 </td>
-                                                 <td class="text-center-custom">
-                                                     @php
-                                                         // Check if student has uploaded all grades
-                                                         $hasAllGrades = true;
-                                                         foreach($subjects as $subject) {
-                                                             $grade = $grades[$student->user_id][$subject->id] ?? null;
-                                                             $gradeValue = $grade ? $grade->grade : null;
-                                                             if ($gradeValue === null) {
-                                                                 $hasAllGrades = false;
-                                                                 break;
-                                                             }
-                                                         }
-                                                         
-                                                         // Only check for approval status if all grades are uploaded
-                                                         if ($hasAllGrades) {
-                                                             $status = DB::table('grade_submission_subject')
-                                                                 ->where('grade_submission_subject.grade_submission_id', $gradeSubmission->id)
-                                                                 ->where('grade_submission_subject.user_id', $student->user_id)
-                                                                 ->value('status') ?? 'pending';
-                                                         } else {
-                                                             $status = 'pending';
-                                                         }
-                                                         
-                                                         // Check if proof exists
-                                                         $proof = \App\Models\GradeSubmissionProof::where('grade_submission_id', $gradeSubmission->id)
-                                                             ->where('user_id', $student->user_id)
-                                                             ->first();
-                                                     @endphp
-                                                     <span class="status-badge {{ $status === 'approved' ? 'approved' : ($status === 'rejected' ? 'rejected' : 'pending') }}">
-                                                         {{ $hasAllGrades ? ucfirst($status) : 'Pending Grades' }}
-                                                     </span>
-                                                 </td>
-                                                 <td class="text-center-custom">
-                                                     <div class="action-buttons">
-                                                         @php
-                                                             $hasIncGrade = false;
-                                                             foreach($subjects as $subject) {
-                                                                 $grade = $grades[$student->user_id][$subject->id] ?? null;
-                                                                 $gradeValue = $grade ? $grade->grade : null;
-                                                                 if(strtoupper($gradeValue) === 'INC') {
-                                                                     $hasIncGrade = true;
-                                                                     break;
-                                                                 }
-                                                             }
-                                                         @endphp
-                                                         
-                                                         @if($proof && $proof->status === 'pending')
-                                                             <div class="action-group">
-                                                                 <form method="POST" action="{{ route('training.grade-submissions.update-proof-status', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}" class="d-inline">
-                                                                     @csrf
-                                                                     <input type="hidden" name="status" value="approved">
-                                                                     <button type="submit" class="action-button btn-success-custom">
-                                                                         <i class="fas fa-check-circle"></i> Approve
-                                                                     </button>
-                                                                 </form>
-                                                                 <form method="POST" action="{{ route('training.grade-submissions.update-proof-status', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}" class="d-inline">
-                                                                     @csrf
-                                                                     <input type="hidden" name="status" value="rejected">
-                                                                     <button type="submit" class="action-button btn-danger-custom">
-                                                                         <i class="fas fa-times-circle"></i> Reject
-                                                                     </button>
-                                                                 </form>
-                                                             </div>
-                                                         @else
-                                                             @if($hasIncGrade)
-                                                                 <form method="POST" action="{{ route('training.grade-submissions.update-proof-status', ['gradeSubmission' => $gradeSubmission->id, 'student' => $student->user_id]) }}" class="d-inline">
-                                                                     @csrf
-                                                                     <input type="hidden" name="status" value="pending">
-                                                                      <button type="submit" class="action-button btn-warning-custom">
-                                                                          <i class="fas fa-edit"></i> Edit Status
-                                                                      </button>
-                                                                 </form>
-                                                             @else
-                                                                 <span class="text-muted-custom small-text">
-                                                                     Status is final and cannot be changed
-                                                                 </span>
-                                                             @endif
-                                                         @endif
-                                                     </div>
-                                                 </td>
-                                             </tr>
-                                         @endforeach
-                                     </tbody>
-                                </table>
-                            </div>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     @endforeach
                 </div>
@@ -652,6 +675,43 @@
         margin: 0;
         color: var(--dark-text);
         font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .class-section {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+
+    .class-header {
+        background-color: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .class-header h4 {
+        margin: 0;
+        color: #495057;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .submission-section {
+        padding: 20px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .submission-section:last-child {
+        border-bottom: none;
+    }
+
+    .submission-header h5 {
+        margin: 0;
+        color: #6c757d;
+        font-size: 1rem;
         font-weight: 500;
     }
 </style>

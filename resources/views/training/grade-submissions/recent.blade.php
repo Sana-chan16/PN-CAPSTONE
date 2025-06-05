@@ -4,7 +4,6 @@
 <div class="page-container">
     <div class="page-header">
         <h1>Recent Grade Submissions</h1>
-        <p class="subtitle">Latest 10 grade submissions</p>
     </div>
 
     <div class="card">
@@ -15,7 +14,7 @@
                         <i class="fas fa-inbox"></i>
                     </div>
                     <h2>No Recent Submissions</h2>
-                    <p>Start by creating a new grade submission to track student progress</p>
+                    <p>Start by creating a new grade submission to track student grades</p>
                     <a href="{{ route('training.grade-submissions.create') }}" class="button primary">
                         <i class="fas fa-plus"></i> Create New Submission
                     </a>
@@ -70,7 +69,7 @@
 }
 
 .page-header {
-    margin-bottom: 2rem;
+    margin-bottom: 10px;
 }
 
 .page-header h1 {

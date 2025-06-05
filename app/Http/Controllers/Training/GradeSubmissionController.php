@@ -23,9 +23,11 @@ class GradeSubmissionController extends Controller
         $schools = School::all();
         
         // Get classes for each school
-        $classesBySchool = collect();
+        $classesBySchool = [];
         foreach($schools as $school) {
-            $classesBySchool[$school->school_id] = ClassModel::where('school_id', $school->school_id)->get();
+            $classesBySchool[$school->school_id] = ClassModel::where('school_id', $school->school_id)
+                ->select('class_id', 'class_name as name', 'school_id')
+                ->get();
         }
         
         // Get submissions based on filters
@@ -52,7 +54,15 @@ class GradeSubmissionController extends Controller
         }
         
         // Get submissions with related data
-        $submissions = $query->with(['students', 'proofs', 'subjects'])->get();
+        $submissions = $query->with([
+            'students', 
+            'proofs', 
+            'subjects', 
+            'classModel' => function($query) {
+                $query->select('class_id', 'class_name as name', 'school_id');
+            },
+            'school'
+        ])->get();
         
         // Group submissions by school
         $submissionsBySchool = $submissions->groupBy('school_id');
@@ -61,6 +71,48 @@ class GradeSubmissionController extends Controller
         $filterOptions = $submissions->map(function($submission) {
             return $submission->semester . ',' . $submission->term . ',' . $submission->academic_year;
         })->unique()->sortDesc()->values();
+
+        // Debug information
+        \Log::info('Filter Parameters:', [
+            'school_id' => $request->school_id,
+            'class_id' => $request->class_id,
+            'filter_key' => $request->filter_key
+        ]);
+
+        \Log::info('Query Results:', [
+            'total_submissions' => $submissions->count(),
+            'submissions_by_school' => $submissionsBySchool->map->count(),
+            'classes_by_school' => collect($classesBySchool)->map->count()
+        ]);
+
+        // If a school is selected but has no classes, show a message
+        if ($request->has('school_id') && $request->school_id && 
+            (!isset($classesBySchool[$request->school_id]) || $classesBySchool[$request->school_id]->isEmpty())) {
+            return view('training.grade-submissions.monitor', compact(
+                'schools', 
+                'classesBySchool',
+                'submissionsBySchool',
+                'filterOptions'
+            ))
+            ->with('filter_key', $request->filter_key)
+            ->with('school_id', $request->school_id)
+            ->with('class_id', $request->class_id)
+            ->with('message', 'No classes found for the selected school.');
+        }
+
+        // If no submissions found, show a message
+        if ($submissions->isEmpty()) {
+            return view('training.grade-submissions.monitor', compact(
+                'schools', 
+                'classesBySchool',
+                'submissionsBySchool',
+                'filterOptions'
+            ))
+            ->with('filter_key', $request->filter_key)
+            ->with('school_id', $request->school_id)
+            ->with('class_id', $request->class_id)
+            ->with('message', 'No grade submissions found for the selected filters.');
+        }
 
         return view('training.grade-submissions.monitor', compact(
             'schools', 
